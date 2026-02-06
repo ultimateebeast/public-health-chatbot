@@ -8,3 +8,7 @@
 body {
   background-color: #f6f8fa;
 }
+
+* {
+  font-family: "Inter", sans-serif;
+}

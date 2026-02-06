@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -7,14 +9,16 @@ import Dashboard from "./pages/Dashboard";
 import ChatbotPage from "./pages/Chatbot";
 import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
+
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
 
-export default function App() {
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -56,6 +60,15 @@ export default function App() {
           }
         />
       </Routes>
+    </AnimatePresence>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <AnimatedRoutes />
     </BrowserRouter>
   );
 }

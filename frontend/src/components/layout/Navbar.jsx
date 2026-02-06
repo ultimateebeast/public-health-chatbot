@@ -1,91 +1,101 @@
-import React from "react";
 import {
   AppBar,
   Toolbar,
-  Typography,
-  Button,
   Box,
-  IconButton,
+  Typography,
+  Avatar,
+  Button,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { ColorModeContext } from "../../context/ThemeContext";
-import WbSunnyIcon from "@mui/icons-material/WbSunny";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useTheme } from "@mui/material/styles";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const theme = useTheme(); // ⭐ CURRENT THEME (light/dark)
-  const colorMode = React.useContext(ColorModeContext); // ⭐ TOGGLE FUNCTION
+  const location = useLocation();
+
+  const navItems = [
+    { label: "Home", path: "/" },
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Chat", path: "/chat" },
+    { label: "Analytics", path: "/analytics" },
+    { label: "Profile", path: "/profile" },
+  ];
 
   return (
     <AppBar
-      position="sticky"
+      position="fixed"
       elevation={0}
       sx={{
-        background:
-          theme.palette.mode === "light"
-            ? "rgba(255,255,255,0.25)"
-            : "rgba(0,0,0,0.35)",
-        backdropFilter: "blur(12px)",
-        borderBottom:
-          theme.palette.mode === "light"
-            ? "1px solid rgba(255,255,255,0.2)"
-            : "1px solid rgba(255,255,255,0.1)",
+        background: "rgba(255,255,255,0.65)",
+        backdropFilter: "blur(16px)",
+        borderBottom: "1px solid rgba(255,255,255,0.3)",
       }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        {/* Logo */}
+      <Toolbar sx={{ display: "flex", alignItems: "center", px: 4 }}>
+        {/* LOGO */}
         <Typography
-          variant="h5"
+          component={Link}
+          to="/"
           sx={{
+            fontSize: "1.5rem",
             fontWeight: 700,
-            letterSpacing: 0.5,
-            color: theme.palette.mode === "light" ? "#0A84FF" : "#76a9ff",
+            color: "#0A84FF",
+            textDecoration: "none",
+            flexGrow: 1,
           }}>
           Public Health AI
         </Typography>
 
-        {/* Right side links + Toggle */}
-        <Box sx={{ display: "flex", gap: 3, alignItems: "center" }}>
-          {/* ⭐ Dark/Light Mode Button */}
-          <IconButton onClick={colorMode.toggleColorMode}>
-            {theme.palette.mode === "dark" ? (
-              <WbSunnyIcon sx={{ color: "#ffeb3b" }} />
-            ) : (
-              <DarkModeIcon sx={{ color: "#000" }} />
-            )}
-          </IconButton>
+        {/* NAV LINKS */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+          {navItems.map((item) => (
+            <Typography
+              key={item.path}
+              component={Link}
+              to={item.path}
+              sx={{
+                fontSize: "1rem",
+                color: location.pathname === item.path ? "#0A84FF" : "#111",
+                fontWeight: location.pathname === item.path ? 700 : 500,
+                textDecoration: "none",
+                paddingBottom: "3px",
+                borderBottom:
+                  location.pathname === item.path
+                    ? "2px solid #0A84FF"
+                    : "2px solid transparent",
+                transition: "0.25s ease",
+                "&:hover": {
+                  color: "#0A84FF",
+                },
+              }}>
+              {item.label}
+            </Typography>
+          ))}
 
-          {/* Navigation Buttons */}
-          <Button
+          {/* PROFILE AVATAR */}
+          <Avatar
             component={Link}
-            to="/"
-            sx={{ color: "#000", fontWeight: 600 }}>
-            Home
-          </Button>
+            to="/profile"
+            src="https://img.icons8.com/color/96/user-male-circle--v1.png"
+            sx={{
+              width: 40,
+              height: 40,
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+            }}
+          />
 
+          {/* LOGOUT BUTTON */}
           {user && (
-            <>
-              <Button component={Link} to="/dashboard" sx={{ color: "#000" }}>
-                Dashboard
-              </Button>
-              <Button component={Link} to="/chat" sx={{ color: "#000" }}>
-                Chat
-              </Button>
-              <Button component={Link} to="/analytics" sx={{ color: "#000" }}>
-                Analytics
-              </Button>
-
-              <Button onClick={logout} sx={{ color: "red" }}>
-                Logout
-              </Button>
-            </>
-          )}
-
-          {!user && (
-            <Button component={Link} to="/login" sx={{ color: "#000" }}>
-              Login
+            <Button
+              onClick={logout}
+              sx={{
+                ml: 2,
+                textTransform: "none",
+                fontSize: "0.9rem",
+                color: "#FF3B30",
+                fontWeight: 600,
+              }}>
+              Logout
             </Button>
           )}
         </Box>

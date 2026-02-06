@@ -8,8 +8,12 @@ import {
   PieChart,
   Pie,
   Cell,
+  ResponsiveContainer,
 } from "recharts";
 
+import PageWrapper from "../components/animations/PageWrapper";
+
+// Line chart data
 const data = [
   { day: "Mon", queries: 20 },
   { day: "Tue", queries: 35 },
@@ -18,6 +22,7 @@ const data = [
   { day: "Fri", queries: 60 },
 ];
 
+// Pie chart data
 const pieData = [
   { name: "Symptoms", value: 40 },
   { name: "Medicines", value: 25 },
@@ -25,47 +30,98 @@ const pieData = [
   { name: "Emergency", value: 15 },
 ];
 
+// Custom Colors
+const COLORS = ["#007AFF", "#23D5AB", "#6B73FF", "#000DFF"];
+
 export default function Analytics() {
   return (
-    <Box sx={{ padding: 3 }}>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
-        Analytics
-      </Typography>
+    <PageWrapper>
+      <Box
+        sx={{
+          padding: 4,
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #e6efff, #ffffff)",
+        }}>
+        {/* TITLE */}
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            mb: 4,
+            color: "#111",
+            fontSize: "2.3rem",
+          }}>
+          📊 Analytics Overview
+        </Typography>
 
-      <Paper sx={{ padding: 3, borderRadius: "20px" }}>
-        <Typography variant="h6">Queries per Day</Typography>
-        <LineChart width={600} height={300} data={data}>
-          <XAxis dataKey="day" />
-          <YAxis />
-          <Tooltip />
-          <Line
-            type="monotone"
-            dataKey="queries"
-            stroke="#0A84FF"
-            strokeWidth={3}
-          />
-        </LineChart>
-      </Paper>
+        {/* LINE CHART CARD */}
+        <Paper
+          sx={{
+            padding: 4,
+            borderRadius: "25px",
+            background: "rgba(255,255,255,0.6)",
+            backdropFilter: "blur(18px)",
+            border: "1px solid rgba(255,255,255,0.4)",
+            boxShadow: "0 15px 40px rgba(0,0,0,0.08)",
+            mb: 4,
+          }}>
+          <Typography
+            variant="h6"
+            sx={{ mb: 3, fontWeight: 600, color: "#222" }}>
+            📈 Queries per Day
+          </Typography>
 
-      <Paper sx={{ padding: 3, borderRadius: "20px", mt: 4 }}>
-        <Typography variant="h6">Query Categories</Typography>
-        <PieChart width={600} height={300}>
-          <Pie
-            data={pieData}
-            dataKey="value"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}>
-            {pieData.map((_, i) => (
-              <Cell
-                key={i}
-                fill={["#0A84FF", "#23D5AB", "#6B73FF", "#000DFF"][i]}
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={data}>
+              <XAxis dataKey="day" stroke="#555" />
+              <YAxis stroke="#555" />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="queries"
+                stroke="#007AFF"
+                strokeWidth={4}
+                dot={{ r: 6 }}
+                activeDot={{ r: 8 }}
               />
-            ))}
-          </Pie>
-          <Tooltip />
-        </PieChart>
-      </Paper>
-    </Box>
+            </LineChart>
+          </ResponsiveContainer>
+        </Paper>
+
+        {/* PIE CHART CARD */}
+        <Paper
+          sx={{
+            padding: 4,
+            borderRadius: "25px",
+            background: "rgba(255,255,255,0.6)",
+            backdropFilter: "blur(18px)",
+            border: "1px solid rgba(255,255,255,0.4)",
+            boxShadow: "0 15px 40px rgba(0,0,0,0.08)",
+          }}>
+          <Typography
+            variant="h6"
+            sx={{ mb: 3, fontWeight: 600, color: "#222" }}>
+            🥧 Query Categories
+          </Typography>
+
+          <ResponsiveContainer width="100%" height={320}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                outerRadius={110}
+                label>
+                {pieData.map((_, i) => (
+                  <Cell key={`cell-${i}`} fill={COLORS[i]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </Paper>
+      </Box>
+    </PageWrapper>
   );
 }

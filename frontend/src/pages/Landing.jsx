@@ -1,140 +1,127 @@
-import { useEffect, useRef } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import gsap from "gsap";
-import Lenis from "@studio-freight/lenis";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function Landing() {
-  const heroRef = useRef(null);
-  const imgRef = useRef(null);
-  const textRef = useRef(null);
-
-  useEffect(() => {
-    // Smooth Apple-like scroll
-    const lenis = new Lenis({
-      duration: 1.4,
-      smooth: true,
-      easing: (t) => 1 - Math.pow(1 - t, 4),
-    });
-
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-
-    // Apple-style fade-in animations
-    gsap.from(textRef.current, {
-      opacity: 0,
-      y: 30,
-      duration: 1.2,
-      ease: "power3.out",
-    });
-
-    gsap.from(imgRef.current, {
-      opacity: 0,
-      y: 80,
-      duration: 1.5,
-      ease: "power3.out",
-      delay: 0.3,
-    });
-  }, []);
-
   return (
     <Box
       sx={{
-        height: "100vh",
-        background: "linear-gradient(135deg, #fdfdfd, #e8eef7)",
+        minHeight: "100vh",
+        background: "linear-gradient(135deg,#e3eeff,#f8fbff)",
+        padding: { xs: "40px", md: "80px" },
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        paddingX: "5%",
-      }}
-      ref={heroRef}>
-      <Box sx={{ maxWidth: "600px" }}>
+        position: "relative",
+        overflow: "hidden",
+      }}>
+      {/* GLOW BEHIND ORB */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.55 }}
+        transition={{ duration: 2 }}
+        style={{
+          position: "absolute",
+          right: "-120px",
+          top: "120px",
+          width: "480px",
+          height: "480px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #0A84FF33, #0A84FF00)",
+          filter: "blur(60px)",
+        }}
+      />
+
+      {/* RIGHT FLOATING AI ORB */}
+      <motion.img
+        src="https://img.icons8.com/fluency/240/artificial-intelligence.png"
+        width={380}
+        style={{
+          position: "absolute",
+          right: 80,
+          top: "22%",
+          opacity: 0.25,
+          filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.18))",
+        }}
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 0.25, scale: 1 }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
+      />
+
+      {/* LEFT HERO CONTENT */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
+        style={{ maxWidth: "650px", zIndex: 10 }}>
         <Typography
-          ref={textRef}
           variant="h2"
           sx={{
-            fontWeight: 700,
-            lineHeight: 1.1,
+            fontWeight: 800,
+            lineHeight: "1.2",
+            color: "#0A0A0A",
             marginBottom: 2,
-            color: "#111",
-            fontSize: { xs: "2.2rem", md: "3.5rem" },
           }}>
           Your Health.
           <br />
-          <span style={{ color: "#0A84FF" }}>Powered by Intelligence.</span>
+          Powered by{" "}
+          <span
+            style={{ color: "#0A84FF", textShadow: "0 2px 10px #0A84FF33" }}>
+            Intelligence.
+          </span>
         </Typography>
 
         <Typography
           sx={{
-            opacity: 0.7,
-            fontSize: "1.2rem",
+            fontSize: "1.25rem",
+            color: "#333",
+            opacity: 0.95,
+            maxWidth: "520px",
             marginBottom: 4,
-            maxWidth: "500px",
+            lineHeight: 1.6,
           }}>
-          Designed with precision. Built by advanced AI. Experience healthcare
-          assistance with an Apple-style touch.
+          Experience healthcare assistance enhanced with advanced AI —
+          beautifully designed with an Apple-grade smooth and modern interface.
         </Typography>
 
-        <Box sx={{ display: "flex", gap: 2 }}>
+        {/* BUTTONS */}
+        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <Button
+            component={Link}
+            to="/chat"
             variant="contained"
-            size="large"
             sx={{
-              paddingX: 5,
-              paddingY: 1.5,
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              textTransform: "none",
               background: "#0A84FF",
-              boxShadow: "0 10px 30px rgba(0, 153, 255, 0.3)",
-            }}
-            href="/chat">
+              paddingX: 4,
+              paddingY: 1.6,
+              fontSize: "1.05rem",
+              fontWeight: 600,
+              borderRadius: "14px",
+              boxShadow: "0 8px 25px rgba(0, 132, 255, 0.28)",
+              textTransform: "none",
+            }}>
             Try Assistant
           </Button>
 
           <Button
-            variant="outlined"
-            size="large"
+            component={Link}
+            to="/login"
             sx={{
-              paddingX: 5,
-              paddingY: 1.5,
-              fontSize: "1.1rem",
-              borderRadius: "12px",
-              textTransform: "none",
-              borderColor: "#0A84FF",
+              paddingX: 4,
+              paddingY: 1.6,
+              fontSize: "1.05rem",
+              fontWeight: 600,
+              borderRadius: "14px",
+              border: "2px solid #0A84FF",
               color: "#0A84FF",
-              backdropFilter: "blur(10px)",
-            }}
-            href="/login">
+              textTransform: "none",
+              "&:hover": {
+                background: "rgba(10,132,255,0.08)",
+              },
+            }}>
             Login
           </Button>
         </Box>
-      </Box>
-
-      {/* Right side animated avatar */}
-      <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
-        <img
-          ref={imgRef}
-          src="https://img.icons8.com/fluency/240/artificial-intelligence.png"
-          alt="AI"
-          style={{
-            width: "350px",
-            filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.15))",
-            transform: "translateY(0px)",
-            animation: "float 4s ease-in-out infinite",
-          }}
-        />
-      </Box>
-
-      <style>{`
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-          100% { transform: translateY(0px); }
-        }
-      `}</style>
+      </motion.div>
     </Box>
   );
 }
