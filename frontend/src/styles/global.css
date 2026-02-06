@@ -1,14 +1,27 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Inter", sans-serif;
+/* src/styles/global.css */
+
+:root {
+  --bg: #f5f9ff;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --text: #111;
+  --text-light: #333;
+  --accent: #0a84ff;
+  --glass-border: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] {
+  --bg: #0e1220;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --text: #ffffff;
+  --text-light: #c7c7c7;
+  --accent: #4fb3ff;
+  --glass-border: rgba(255,255,255,0.12);
 }
 
 body {
-  background-color: #f6f8fa;
-}
-
-* {
-  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.4s ease, color 0.4s ease;
 }

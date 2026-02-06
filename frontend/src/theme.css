@@ -1,0 +1,34 @@
+/* ===== LIGHT THEME ===== */
+:root[data-theme='light'] {
+  --bg: #f6f9ff;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --text: #111;
+  --text-soft: #333;
+  --pill-bg: rgba(255, 255, 255, 0.85);
+  --pill-active: linear-gradient(135deg,#0A84FF,#2E9BFF);
+  --glass-border: rgba(255,255,255,0.45);
+  --nav-bg: rgba(255,255,255,0.55);
+}
+
+/* ===== DARK THEME ===== */
+:root[data-theme='dark'] {
+  --bg: #0d1117;
+  --card-bg: rgba(22, 27, 34, 0.75);
+  --text: #e6e6e6;
+  --text-soft: #c7c7c7;
+  --pill-bg: rgba(255,255,255,0.08);
+  --pill-active: linear-gradient(135deg,#0075ff,#4db2ff);
+  --glass-border: rgba(255,255,255,0.2);
+  --nav-bg: rgba(20, 23, 28, 0.65);
+}
+
+/* Smooth Animation */
+* {
+  transition: background 0.25s ease, color 0.25s ease,
+              border 0.25s ease, backdrop-filter 0.25s ease;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}

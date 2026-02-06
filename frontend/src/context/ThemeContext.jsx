@@ -1,52 +1,31 @@
-import { createContext, useState, useMemo, useEffect } from "react";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+// src/context/ThemeContext.jsx
+import { createContext, useContext, useState, useEffect } from "react";
 
-export const ColorModeContext = createContext();
+const ThemeContext = createContext();
+export const useTheme = () => useContext(ThemeContext);
 
 export default function ThemeContextProvider({ children }) {
-  const [mode, setMode] = useState(localStorage.getItem("theme") || "light");
+  const [mode, setMode] = useState("light");
 
-  // Update localStorage when theme changes
+  // Load theme from localStorage
   useEffect(() => {
-    localStorage.setItem("theme", mode);
+    const saved = localStorage.getItem("theme-mode");
+    if (saved) setMode(saved);
+  }, []);
+
+  // Apply theme to HTML root
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", mode);
+    localStorage.setItem("theme-mode", mode);
   }, [mode]);
 
-  const colorMode = useMemo(
-    () => ({
-      toggleColorMode: () => {
-        setMode((prev) => (prev === "light" ? "dark" : "light"));
-      },
-    }),
-    [],
-  );
-
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode,
-          ...(mode === "light"
-            ? {
-                background: {
-                  default: "#F8FAFC",
-                },
-              }
-            : {
-                background: {
-                  default: "#0B0E11",
-                },
-              }),
-        },
-        typography: {
-          fontFamily: "Inter, sans-serif",
-        },
-      }),
-    [mode],
-  );
+  const toggleTheme = () => {
+    setMode((prev) => (prev === "light" ? "dark" : "light"));
+  };
 
   return (
-    <ColorModeContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>{children}</ThemeProvider>
-    </ColorModeContext.Provider>
+    <ThemeContext.Provider value={{ mode, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
   );
 }

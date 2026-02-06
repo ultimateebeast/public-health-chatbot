@@ -2,27 +2,45 @@ import { useEffect, useRef } from "react";
 import { Box, Typography } from "@mui/material";
 import gsap from "gsap";
 import Lenis from "@studio-freight/lenis";
+import { useTheme } from "../context/ThemeContext";
 
-// Glass Card Component (Apple Style)
+// Apple-style Glass Card Component
 function GlassCard({ title, value, subtitle }) {
+  const { mode } = useTheme();
+
   return (
     <Box
       sx={{
         padding: 3,
         minHeight: "150px",
-        borderRadius: "20px",
-        background: "rgba(255,255,255,0.75)",
+        borderRadius: "22px",
+        background:
+          mode === "light" ? "rgba(255,255,255,0.75)" : "rgba(40,40,40,0.55)",
         backdropFilter: "blur(20px)",
-        boxShadow: "0 10px 35px rgba(0,0,0,0.12)",
-        border: "1px solid rgba(255,255,255,0.45)",
+        border:
+          mode === "light"
+            ? "1px solid rgba(255,255,255,0.55)"
+            : "1px solid rgba(255,255,255,0.15)",
+        boxShadow:
+          mode === "light"
+            ? "0 12px 35px rgba(0,0,0,0.10)"
+            : "0 12px 35px rgba(0,0,0,0.50)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        transition: "transform 0.3s ease",
+        transition: "0.3s ease",
         cursor: "pointer",
-        "&:hover": { transform: "translateY(-8px)" },
+        "&:hover": {
+          transform: "translateY(-8px)",
+        },
       }}>
-      <Typography sx={{ fontSize: "0.9rem", color: "#222", opacity: 0.9 }}>
+      <Typography
+        sx={{
+          fontSize: "0.95rem",
+          opacity: 0.9,
+          color: mode === "light" ? "#222" : "#ddd",
+          marginBottom: 0.5,
+        }}>
         {title}
       </Typography>
 
@@ -30,13 +48,17 @@ function GlassCard({ title, value, subtitle }) {
         sx={{
           fontSize: "2.4rem",
           fontWeight: 700,
-          color: "#000",
-          lineHeight: 1.2,
+          color: mode === "light" ? "#000" : "#fff",
         }}>
         {value}
       </Typography>
 
-      <Typography sx={{ fontSize: "0.9rem", color: "#444", opacity: 0.9 }}>
+      <Typography
+        sx={{
+          fontSize: "0.9rem",
+          opacity: 0.8,
+          color: mode === "light" ? "#444" : "#ccc",
+        }}>
         {subtitle}
       </Typography>
     </Box>
@@ -45,27 +67,27 @@ function GlassCard({ title, value, subtitle }) {
 
 export default function Dashboard() {
   const cardsRef = useRef([]);
+  const { mode } = useTheme();
 
   useEffect(() => {
-    // Smooth Apple-like scrolling
+    // Smooth Scroll
     const lenis = new Lenis({
-      duration: 1.3,
       smooth: true,
-      easing: (t) => 1 - Math.pow(1 - t, 4),
+      duration: 1.4,
     });
 
-    function raf(time) {
+    const raf = (time) => {
       lenis.raf(time);
       requestAnimationFrame(raf);
-    }
+    };
     requestAnimationFrame(raf);
 
-    // GSAP entrance animation
+    // GSAP Fade-Up animation
     gsap.from(cardsRef.current, {
       opacity: 0,
       y: 40,
-      stagger: 0.15,
-      duration: 1.25,
+      stagger: 0.12,
+      duration: 1.1,
       ease: "power3.out",
     });
   }, []);
@@ -74,41 +96,43 @@ export default function Dashboard() {
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #c7d2e5, #eef3ff)", // darker + clean
-        padding: "40px",
+        padding: { xs: "20px", md: "40px" },
+        background:
+          mode === "light"
+            ? "linear-gradient(135deg,#dce6f7,#eef4ff)"
+            : "linear-gradient(135deg,#0f0f0f,#1a1a1a)",
       }}>
-      {/* Dashboard Header */}
+      {/* Title */}
       <Typography
         variant="h4"
         sx={{
           fontWeight: 700,
-          marginBottom: 1,
-          fontSize: "2.6rem",
-          color: "#111",
-          textShadow: "0 2px 6px rgba(0,0,0,0.15)",
+          fontSize: { xs: "2rem", md: "2.6rem" },
+          marginBottom: "10px",
+          color: mode === "light" ? "#111" : "#f3f3f3",
+          textShadow:
+            mode === "light"
+              ? "0 2px 5px rgba(0,0,0,0.15)"
+              : "0 2px 5px rgba(0,0,0,0.65)",
         }}>
         Welcome Back 👋
       </Typography>
 
       <Typography
         sx={{
-          fontSize: "1.3rem",
-          opacity: 0.9,
-          marginBottom: 4,
-          color: "#222",
+          fontSize: { xs: "1rem", md: "1.3rem" },
+          opacity: 0.85,
+          marginBottom: "30px",
+          color: mode === "light" ? "#333" : "#ccc",
         }}>
         Your Health Dashboard
       </Typography>
 
-      {/* Cards Section */}
+      {/* Responsively Auto-Fitting Cards */}
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "1fr 1fr",
-            md: "1fr 1fr 1fr 1fr",
-          },
+          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
           gap: 3,
           marginTop: 3,
         }}>

@@ -5,52 +5,55 @@ import MicIcon from "@mui/icons-material/Mic";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import ReactMarkdown from "react-markdown";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ChatbotPage() {
+  const { mode } = useTheme();
+
   const [messages, setMessages] = useState([
     {
       sender: "ai",
-      text: "👋 **Welcome!**\nI'm your **Public Health Assistant**.\n\nHow can I help you today?",
+      text: "👋 **Welcome!** I'm your **Public Health Assistant**.\n\nHow can I help you today?",
     },
   ]);
 
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const messagesEndRef = useRef(null);
-  const messageRefs = useRef([]);
+  const chatRef = useRef(null);
+  const bubbleRefs = useRef([]);
 
-  // Auto scroll + GSAP animation
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: "smooth",
+    });
 
-    const last = messageRefs.current[messageRefs.current.length - 1];
-    if (last) {
-      gsap.from(last, {
-        y: 25,
+    const lastBubble = bubbleRefs.current[bubbleRefs.current.length - 1];
+    if (lastBubble) {
+      gsap.from(lastBubble, {
         opacity: 0,
-        duration: 0.55,
+        y: 20,
+        duration: 0.5,
         ease: "power3.out",
       });
     }
   }, [messages, typing]);
 
-  // SEND MESSAGE
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMsg = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMessage = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
 
-    const userText = input;
+    const msg = input;
     setInput("");
-
     setTyping(true);
 
     try {
       const res = await fetch("http://127.0.0.1:8000/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText }),
+        body: JSON.stringify({ message: msg }),
       });
 
       const data = await res.json();
@@ -58,19 +61,13 @@ export default function ChatbotPage() {
 
       setMessages((prev) => [
         ...prev,
-        {
-          sender: "ai",
-          text: data.reply || "⚠️ Sorry, I couldn't understand. Try again!",
-        },
+        { sender: "ai", text: data.reply || "⚠️ Please try again." },
       ]);
-    } catch (err) {
+    } catch {
       setTyping(false);
       setMessages((prev) => [
         ...prev,
-        {
-          sender: "ai",
-          text: "❌ Server error. Please try again later.",
-        },
+        { sender: "ai", text: "❌ Server error. Try again later." },
       ]);
     }
   };
@@ -79,35 +76,45 @@ export default function ChatbotPage() {
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #0A84FF, #23D5AB)",
+        background:
+          mode === "light"
+            ? "linear-gradient(135deg, #dce6f7, #eef4ff)"
+            : "linear-gradient(135deg, #0d0d0d, #1a1a1a)",
         display: "flex",
         justifyContent: "center",
-        alignItems: "center",
-        padding: 4,
+        paddingTop: { xs: "70px", md: "100px" },
       }}>
-      {/* Vision-OS Floating Glass Bubble */}
+      {/* Chat Window */}
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         style={{
-          width: "90%",
-          maxWidth: "780px",
-          height: "85vh",
-          borderRadius: "28px",
-          padding: "20px",
-          background: "rgba(255,255,255,0.22)",
-          backdropFilter: "blur(25px) saturate(180%)",
-          border: "1px solid rgba(255,255,255,0.35)",
-          boxShadow: "0 18px 45px rgba(0,0,0,0.15)",
+          width: "95%",
+          maxWidth: "750px",
+          height: "80vh",
+          borderRadius: "25px",
           display: "flex",
           flexDirection: "column",
+          background:
+            mode === "light" ? "rgba(255,255,255,0.6)" : "rgba(40,40,40,0.5)",
+          backdropFilter: "blur(20px)",
+          border:
+            mode === "light"
+              ? "1px solid rgba(255,255,255,0.5)"
+              : "1px solid rgba(255,255,255,0.2)",
+          boxShadow:
+            mode === "light"
+              ? "0 10px 40px rgba(0,0,0,0.15)"
+              : "0 10px 40px rgba(0,0,0,0.65)",
         }}>
-        {/* HEADER */}
+        {/* Header */}
         <Box
           sx={{
-            padding: 1,
-            borderBottom: "1px solid rgba(255,255,255,0.35)",
+            padding: 2,
+            borderBottom:
+              mode === "light"
+                ? "1px solid rgba(255,255,255,0.4)"
+                : "1px solid rgba(255,255,255,0.1)",
             display: "flex",
             alignItems: "center",
             gap: 2,
@@ -117,22 +124,27 @@ export default function ChatbotPage() {
             width={48}
             height={48}
             animate={{ scale: [1, 1.08, 1] }}
-            transition={{ repeat: Infinity, duration: 2.2 }}
-            style={{ borderRadius: "50%" }}
+            transition={{ repeat: Infinity, duration: 2 }}
           />
 
           <Box>
-            <Typography sx={{ fontWeight: 700, fontSize: "1.2rem" }}>
+            <Typography
+              sx={{
+                fontSize: "1.15rem",
+                fontWeight: 700,
+                color: mode === "light" ? "#111" : "#eee",
+              }}>
               Public Health Assistant
             </Typography>
-            <Typography sx={{ opacity: 0.65, fontSize: "0.85rem" }}>
-              Powered by PHA
+            <Typography sx={{ fontSize: "0.8rem", opacity: 0.65 }}>
+              Powered by Gemini AI
             </Typography>
           </Box>
         </Box>
 
-        {/* CHAT AREA */}
+        {/* Chat Messages */}
         <Box
+          ref={chatRef}
           sx={{
             flex: 1,
             overflowY: "auto",
@@ -141,10 +153,10 @@ export default function ChatbotPage() {
             flexDirection: "column",
             gap: 2,
           }}>
-          {messages.map((msg, index) => (
+          {messages.map((msg, i) => (
             <div
-              key={index}
-              ref={(el) => (messageRefs.current[index] = el)}
+              key={i}
+              ref={(el) => (bubbleRefs.current[i] = el)}
               style={{
                 display: "flex",
                 justifyContent:
@@ -153,92 +165,88 @@ export default function ChatbotPage() {
               <Box
                 sx={{
                   maxWidth: "75%",
-                  padding: "14px 18px",
-                  borderRadius: "18px",
+                  padding: "12px 18px",
+                  borderRadius: "20px",
                   background:
                     msg.sender === "user"
-                      ? "linear-gradient(135deg, #0078FF, #0AA2FF)"
-                      : "rgba(255,255,255,0.85)",
-                  color: msg.sender === "user" ? "#fff" : "#000",
+                      ? "linear-gradient(135deg,#007AFF,#0AA2FF)"
+                      : mode === "light"
+                        ? "rgba(255,255,255,0.9)"
+                        : "rgba(60,60,60,0.8)",
+                  color:
+                    msg.sender === "user"
+                      ? "#fff"
+                      : mode === "light"
+                        ? "#000"
+                        : "#eee",
                   boxShadow:
                     msg.sender === "user"
-                      ? "0 6px 18px rgba(0,123,255,0.35)"
-                      : "0 6px 18px rgba(0,0,0,0.10)",
-                  fontSize: "0.95rem",
+                      ? "0 6px 18px rgba(0,122,255,0.4)"
+                      : "0 6px 18px rgba(0,0,0,0.2)",
                 }}>
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
               </Box>
             </div>
           ))}
 
-          {/* TYPING INDICATOR */}
           {typing && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{ alignSelf: "flex-start" }}>
-              <Box
-                sx={{
-                  padding: "10px 20px",
-                  borderRadius: "20px",
-                  background: "rgba(255,255,255,0.55)",
-                  backdropFilter: "blur(10px)",
-                  width: "85px",
-                }}>
-                <motion.span
-                  animate={{ opacity: [0.2, 1, 0.2] }}
-                  transition={{ repeat: Infinity, duration: 1 }}>
-                  typing…
-                </motion.span>
-              </Box>
-            </motion.div>
+            <Typography
+              sx={{
+                opacity: 0.7,
+                fontSize: "0.9rem",
+                marginLeft: "10px",
+              }}>
+              typing...
+            </Typography>
           )}
-
-          <div ref={messagesEndRef} />
         </Box>
 
-        {/* INPUT BAR */}
+        {/* Fixed Input Bar */}
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
-            gap: 2,
-            paddingTop: 2,
-            borderTop: "1px solid rgba(255,255,255,0.4)",
+            gap: 1.5,
+            padding: 2,
+            borderTop:
+              mode === "light"
+                ? "1px solid rgba(255,255,255,0.4)"
+                : "1px solid rgba(255,255,255,0.1)",
           }}>
-          {/* MIC */}
           <IconButton
             sx={{
-              background: "rgba(255,255,255,0.5)",
-              backdropFilter: "blur(12px)",
+              background:
+                mode === "light"
+                  ? "rgba(255,255,255,0.8)"
+                  : "rgba(60,60,60,0.8)",
               width: 45,
               height: 45,
             }}>
             <MicIcon />
           </IconButton>
 
-          {/* TEXT INPUT */}
           <TextField
             fullWidth
-            placeholder="Ask your question…"
+            placeholder="Ask something..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             sx={{
-              background: "rgba(255,255,255,0.7)",
-              borderRadius: "12px",
+              background:
+                mode === "light"
+                  ? "rgba(255,255,255,0.85)"
+                  : "rgba(70,70,70,0.8)",
+              borderRadius: "14px",
               "& fieldset": { border: "none" },
             }}
           />
 
-          {/* SEND */}
           <IconButton
             onClick={sendMessage}
             sx={{
-              background: "#0078FF",
+              background: "#007AFF",
               width: 45,
               height: 45,
-              "&:hover": { background: "#0060D1" },
+              "&:hover": { background: "#0061D4" },
             }}>
             <SendIcon sx={{ color: "#fff" }} />
           </IconButton>
