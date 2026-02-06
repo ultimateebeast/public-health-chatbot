@@ -1,16 +1,9 @@
-import {
-  AppBar,
-  Toolbar,
-  Box,
-  Typography,
-  Avatar,
-  Button,
-} from "@mui/material";
+import { AppBar, Toolbar, Box, Typography, Avatar } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
 
   const navItems = [
@@ -26,12 +19,13 @@ export default function Navbar() {
       position="fixed"
       elevation={0}
       sx={{
-        background: "rgba(255,255,255,0.65)",
-        backdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255,255,255,0.3)",
+        background: "rgba(255,255,255,0.6)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.25)",
+        px: 4,
       }}>
-      <Toolbar sx={{ display: "flex", alignItems: "center", px: 4 }}>
-        {/* LOGO */}
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        {/* LEFT — LOGO */}
         <Typography
           component={Link}
           to="/"
@@ -40,13 +34,22 @@ export default function Navbar() {
             fontWeight: 700,
             color: "#0A84FF",
             textDecoration: "none",
-            flexGrow: 1,
           }}>
           Public Health AI
         </Typography>
 
-        {/* NAV LINKS */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+        {/* CENTER — NAVIGATION PILL */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            padding: "10px 25px",
+            borderRadius: "40px",
+            background: "rgba(255,255,255,0.7)",
+            backdropFilter: "blur(25px) saturate(180%)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+            border: "1px solid rgba(255,255,255,0.5)",
+          }}>
           {navItems.map((item) => (
             <Typography
               key={item.path}
@@ -54,51 +57,41 @@ export default function Navbar() {
               to={item.path}
               sx={{
                 fontSize: "1rem",
-                color: location.pathname === item.path ? "#0A84FF" : "#111",
-                fontWeight: location.pathname === item.path ? 700 : 500,
+                fontWeight: 600,
+                padding: "6px 14px",
+                borderRadius: "20px",
                 textDecoration: "none",
-                paddingBottom: "3px",
-                borderBottom:
+                color:
+                  location.pathname === item.path ? "#fff" : "rgba(0,0,0,0.7)",
+                background:
                   location.pathname === item.path
-                    ? "2px solid #0A84FF"
-                    : "2px solid transparent",
+                    ? "linear-gradient(135deg,#0A84FF,#4AB1FF)"
+                    : "transparent",
                 transition: "0.25s ease",
                 "&:hover": {
-                  color: "#0A84FF",
+                  background:
+                    location.pathname === item.path
+                      ? "linear-gradient(135deg,#006BE6,#0A84FF)"
+                      : "rgba(0,0,0,0.06)",
                 },
               }}>
               {item.label}
             </Typography>
           ))}
-
-          {/* PROFILE AVATAR */}
-          <Avatar
-            component={Link}
-            to="/profile"
-            src="https://img.icons8.com/color/96/user-male-circle--v1.png"
-            sx={{
-              width: 40,
-              height: 40,
-              cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-            }}
-          />
-
-          {/* LOGOUT BUTTON */}
-          {user && (
-            <Button
-              onClick={logout}
-              sx={{
-                ml: 2,
-                textTransform: "none",
-                fontSize: "0.9rem",
-                color: "#FF3B30",
-                fontWeight: 600,
-              }}>
-              Logout
-            </Button>
-          )}
         </Box>
+
+        {/* RIGHT — AVATAR */}
+        <Avatar
+          component={Link}
+          to="/profile"
+          src="https://img.icons8.com/color/96/user-male-circle--v1.png"
+          sx={{
+            width: 42,
+            height: 42,
+            cursor: "pointer",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.25)",
+          }}
+        />
       </Toolbar>
     </AppBar>
   );
