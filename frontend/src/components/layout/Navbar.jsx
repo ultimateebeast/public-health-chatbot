@@ -24,14 +24,12 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 
 import { motion } from "framer-motion";
-import { useTheme } from "../../context/ThemeContext";
+import { useThemeContext } from "../../hooks/useThemeContext";
 
 export default function Navbar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-
-  // ⭐ Correct theme hook
-  const { mode, toggleTheme } = useTheme();
+  const { mode, toggleTheme } = useThemeContext();
 
   const navItems = [
     { name: "Home", path: "/", icon: <HomeIcon /> },
@@ -43,6 +41,8 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
+  const primaryGradient = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+
   return (
     <Box
       sx={{
@@ -50,170 +50,252 @@ export default function Navbar() {
         top: 0,
         zIndex: 200,
         width: "100%",
-        backdropFilter: "blur(20px)",
+        backdropFilter: "blur(15px)",
         background:
-          mode === "light" ? "rgba(255,255,255,0.55)" : "rgba(20,20,20,0.65)",
+          mode === "light"
+            ? "rgba(255, 255, 255, 0.96)"
+            : "rgba(20, 20, 20, 0.96)",
         borderBottom:
           mode === "light"
-            ? "1px solid rgba(255,255,255,0.4)"
-            : "1px solid rgba(255,255,255,0.15)",
-        padding: { xs: "12px 20px", md: "12px 40px" },
+            ? "1px solid rgba(102, 126, 234, 0.1)"
+            : "1px solid rgba(102, 126, 234, 0.2)",
+        padding: { xs: "16px 20px", md: "16px 40px" },
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
       }}>
-      {/* LOGO */}
-      <Box
-        component={Link}
-        to="/"
-        sx={{
-          fontWeight: 700,
-          fontSize: { xs: "1.2rem", md: "1.4rem" },
-          textDecoration: "none",
-          color: mode === "light" ? "#0A84FF" : "#4AB1FF",
-        }}>
-        Public Health AI
-      </Box>
+      {/* LOGO WITH ICON */}
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Box
+          component={Link}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            textDecoration: "none",
+            fontWeight: 800,
+            fontSize: "1.3rem",
+            background: primaryGradient,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            fontFamily: "'Poppins', sans-serif",
+            color: "#667eea",
+            cursor: "pointer",
+          }}>
+          💊 Health AI
+        </Box>
+      </motion.div>
 
       {/* DESKTOP NAVIGATION */}
       <Box
         sx={{
           display: { xs: "none", md: "flex" },
-          gap: 2,
+          gap: 1.5,
           background:
-            mode === "light" ? "rgba(255,255,255,0.65)" : "rgba(40,40,40,0.7)",
-          padding: "8px 15px",
-          borderRadius: "40px",
-          boxShadow:
             mode === "light"
-              ? "0 6px 20px rgba(0,0,0,0.08)"
-              : "0 6px 20px rgba(0,0,0,0.4)",
+              ? "rgba(102, 126, 234, 0.08)"
+              : "rgba(102, 126, 234, 0.12)",
+          padding: "10px 18px",
+          borderRadius: "16px",
+          border: `1px solid rgba(102, 126, 234, ${mode === "light" ? "0.2" : "0.3"})`,
         }}>
         {navItems.map((item) => (
-          <motion.div key={item.path} whileTap={{ scale: 0.97 }}>
+          <motion.div
+            key={item.path}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}>
             <Button
               component={Link}
               to={item.path}
               sx={{
                 textTransform: "none",
-                borderRadius: "50px",
-                padding: "10px 18px",
-                gap: 1,
+                borderRadius: "12px",
+                padding: "10px 16px",
+                gap: 0.8,
                 fontWeight: 600,
+                fontSize: "0.95rem",
+                fontFamily: "'Inter', sans-serif",
                 background: isActive(item.path)
-                  ? "linear-gradient(135deg,#0A84FF,#2E9BFF)"
-                  : mode === "light"
-                    ? "rgba(255,255,255,0.9)"
-                    : "rgba(60,60,60,0.8)",
+                  ? primaryGradient
+                  : "transparent",
                 color: isActive(item.path)
-                  ? "#fff"
+                  ? "white"
                   : mode === "light"
-                    ? "#222"
-                    : "#eee",
+                    ? "#1a1a1a"
+                    : "#f0f0f0",
                 boxShadow: isActive(item.path)
-                  ? "0 6px 18px rgba(10,132,255,0.4)"
+                  ? "0 4px 12px rgba(102, 126, 234, 0.4)"
                   : "none",
+                transition: "all 0.3s ease",
+                display: "flex",
+                alignItems: "center",
               }}>
               {item.icon}
-              {item.name}
+              <Box sx={{ display: { xs: "none", lg: "inline" } }}>
+                {item.name}
+              </Box>
             </Button>
           </motion.div>
         ))}
       </Box>
 
-      {/* DARK MODE BUTTON (DESKTOP) */}
-      <IconButton
-        onClick={toggleTheme}
-        sx={{
-          ml: 2,
-          display: { xs: "none", md: "flex" },
-          color: mode === "light" ? "#222" : "#fff",
-        }}>
-        {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
-      </IconButton>
+      {/* RIGHT CONTROLS */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        {/* DARK MODE BUTTON */}
+        <motion.div whileHover={{ rotate: 20 }} whileTap={{ rotate: -20 }}>
+          <IconButton
+            onClick={toggleTheme}
+            sx={{
+              background:
+                mode === "light"
+                  ? "rgba(102, 126, 234, 0.1)"
+                  : "rgba(102, 126, 234, 0.2)",
+              color: "#667eea",
+              borderRadius: "10px",
+              padding: "10px",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                background:
+                  mode === "light"
+                    ? "rgba(102, 126, 234, 0.15)"
+                    : "rgba(102, 126, 234, 0.25)",
+              },
+            }}>
+            {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
+          </IconButton>
+        </motion.div>
 
-      {/* MOBILE MENU BUTTON */}
-      <IconButton
-        sx={{ display: { xs: "flex", md: "none" } }}
-        onClick={() => setOpen(true)}>
-        <MenuIcon fontSize="large" />
-      </IconButton>
+        {/* PROFILE AVATAR (DESKTOP) */}
+        <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+          <Box
+            component={Link}
+            to="/profile"
+            sx={{
+              width: 42,
+              height: 42,
+              borderRadius: "10px",
+              background: primaryGradient,
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.4rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 6px 20px rgba(102, 126, 234, 0.4)",
+              },
+            }}>
+            👤
+          </Box>
+        </motion.div>
 
-      {/* AVATAR (DESKTOP) */}
-      <Avatar
-        src="https://img.icons8.com/color/96/user-male-circle--v1.png"
-        sx={{
-          width: 42,
-          height: 42,
-          cursor: "pointer",
-          ml: 2,
-          display: { xs: "none", md: "block" },
-        }}
-        component={Link}
-        to="/profile"
-      />
+        {/* MOBILE MENU BUTTON */}
+        <IconButton
+          sx={{ display: { xs: "flex", md: "none" } }}
+          onClick={() => setOpen(true)}>
+          <MenuIcon fontSize="large" />
+        </IconButton>
+      </Box>
 
       {/* MOBILE DRAWER */}
       <Drawer
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
-        PaperProps={{
-          sx: {
-            width: "260px",
-            backdropFilter: "blur(20px)",
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: "280px",
+            backdropFilter: "blur(15px)",
             background:
               mode === "light"
-                ? "rgba(255,255,255,0.7)"
-                : "rgba(25,25,25,0.85)",
+                ? "rgba(255, 255, 255, 0.95)"
+                : "rgba(25, 25, 25, 0.95)",
           },
         }}>
+        {/* Header with Close */}
         <Box
           sx={{
-            padding: "20px 10px",
+            padding: "16px",
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
+            borderBottom: `1px solid rgba(102, 126, 234, ${mode === "light" ? "0.1" : "0.2"})`,
           }}>
-          <IconButton onClick={toggleTheme}>
-            {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
-          </IconButton>
-
+          <Box sx={{ fontWeight: 700, fontSize: "1.1rem", color: "#667eea" }}>
+            Menu
+          </Box>
           <IconButton onClick={() => setOpen(false)}>
             <CloseIcon />
           </IconButton>
         </Box>
 
-        <List>
+        <List sx={{ padding: "12px" }}>
           {navItems.map((item) => (
+            <motion.div key={item.path} whileTap={{ scale: 0.95 }}>
+              <ListItemButton
+                onClick={() => setOpen(false)}
+                component={Link}
+                to={item.path}
+                sx={{
+                  borderRadius: "12px",
+                  margin: "8px 0",
+                  background: isActive(item.path)
+                    ? primaryGradient
+                    : mode === "light"
+                      ? "rgba(102, 126, 234, 0.05)"
+                      : "rgba(102, 126, 234, 0.1)",
+                  color: isActive(item.path)
+                    ? "white"
+                    : mode === "light"
+                      ? "#1a1a1a"
+                      : "#f0f0f0",
+                  fontWeight: isActive(item.path) ? 600 : 500,
+                  transition: "all 0.3s ease",
+                }}>
+                <ListItemIcon
+                  sx={{
+                    color: isActive(item.path) ? "white" : "#667eea",
+                    minWidth: "40px",
+                  }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.name}
+                  sx={{ fontFamily: "'Inter', sans-serif" }}
+                />
+              </ListItemButton>
+            </motion.div>
+          ))}
+
+          {/* Theme Toggle in Mobile */}
+          <Box
+            sx={{
+              marginTop: "16px",
+              paddingTop: "16px",
+              borderTop: `1px solid rgba(102, 126, 234, ${mode === "light" ? "0.1" : "0.2"})`,
+            }}>
             <ListItemButton
-              key={item.path}
-              onClick={() => setOpen(false)}
-              component={Link}
-              to={item.path}
+              onClick={toggleTheme}
               sx={{
                 borderRadius: "12px",
-                margin: "6px 12px",
-                background: isActive(item.path)
-                  ? "linear-gradient(135deg,#0A84FF,#2E9BFF)"
-                  : mode === "light"
-                    ? "rgba(255,255,255,0.9)"
-                    : "rgba(55,55,55,0.7)",
-                color: isActive(item.path)
-                  ? "#fff"
-                  : mode === "light"
-                    ? "#222"
-                    : "#eee",
+                background:
+                  mode === "light"
+                    ? "rgba(102, 126, 234, 0.05)"
+                    : "rgba(102, 126, 234, 0.1)",
               }}>
-              <ListItemIcon
-                sx={{
-                  color: isActive(item.path) ? "#fff" : "inherit",
-                }}>
-                {item.icon}
+              <ListItemIcon sx={{ color: "#667eea", minWidth: "40px" }}>
+                {mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
               </ListItemIcon>
-
-              <ListItemText primary={item.name} />
+              <ListItemText
+                primary={mode === "light" ? "Dark Mode" : "Light Mode"}
+                sx={{ fontFamily: "'Inter', sans-serif" }}
+              />
             </ListItemButton>
-          ))}
+          </Box>
         </List>
       </Drawer>
     </Box>

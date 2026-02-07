@@ -1,0 +1,104 @@
+# Root .gitignore for entire project
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/*.local
+
+# Backend - Environment and dependencies
+backend_env/
+backend/backend_env/
+backend/venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache and build files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Backend - Database and local files
+*.db
+*.sqlite
+*.sqlite3
+database.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+
+# Sensitive/Security files
+firebase-admin-key.json
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
+.directory
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+.project
+.pydevproject
+.settings/
+.classpath
+
+# Build outputs and artifacts
+dist/
+build/
+*.tsbuildinfo
+.next/
+out/
+
+# Misc
+.cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/

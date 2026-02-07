@@ -1,30 +1,26 @@
-// src/context/ThemeContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { ThemeContext } from "./index";
 
-const ThemeContext = createContext();
-export const useTheme = () => useContext(ThemeContext);
+function getInitialTheme() {
+  const saved = localStorage.getItem("theme");
+  return saved || "light";
+}
 
-export default function ThemeContextProvider({ children }) {
-  const [mode, setMode] = useState("light");
+export function ThemeContextProvider({ children }) {
+  const [theme, setTheme] = useState(getInitialTheme);
 
-  // Load theme from localStorage
+  // Save theme changes
   useEffect(() => {
-    const saved = localStorage.getItem("theme-mode");
-    if (saved) setMode(saved);
-  }, []);
-
-  // Apply theme to HTML root
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", mode);
-    localStorage.setItem("theme-mode", mode);
-  }, [mode]);
+    localStorage.setItem("theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const toggleTheme = () => {
-    setMode((prev) => (prev === "light" ? "dark" : "light"));
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   return (
-    <ThemeContext.Provider value={{ mode, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

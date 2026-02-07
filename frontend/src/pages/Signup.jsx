@@ -1,131 +1,259 @@
-import { Box, TextField, Button, Typography } from "@mui/material";
+import { Box, TextField, Button, Typography, Alert, Link } from "@mui/material";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
 export default function Signup() {
+  const { signup, error: authError } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+
+    if (!email || !password || !confirmPassword) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await signup(email, password);
+      window.location.href = "/dashboard";
+    } catch (err) {
+      const errorMessage = err.message || "Signup failed";
+      setError(errorMessage);
+      console.error("Signup error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #dce6f7, #eef4ff)", // theme match
+        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 3,
+        padding: 2,
       }}>
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}>
-        <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-          style={{
-            background: "rgba(255,255,255,0.55)",
-            backdropFilter: "blur(20px)",
-            borderRadius: "22px",
-            padding: "40px 35px",
-            width: "420px",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
-            border: "1px solid rgba(255,255,255,0.4)",
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}>
+        <Box
+          sx={{
+            width: 420,
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "20px",
+            padding: "50px 40px",
+            boxShadow: "0 25px 50px rgba(0, 0, 0, 0.2)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
           }}>
-          {/* TITLE */}
-          <Typography
-            variant="h4"
+          {/* Header */}
+          <Box
             sx={{
-              mb: 3,
-              fontWeight: 800,
-              color: "#111",
-              textAlign: "center",
-            }}>
-            Create Account ✨
-          </Typography>
-
-          <Typography
-            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
               mb: 4,
-              opacity: 0.75,
-              textAlign: "center",
-              fontSize: "1rem",
-              maxWidth: "320px",
-              margin: "0 auto",
             }}>
-            Join Public Health AI and unlock personalized healthcare assistance.
-          </Typography>
+            <Box
+              sx={{
+                width: 70,
+                height: 70,
+                borderRadius: "16px",
+                background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mb: 2,
+              }}>
+              <PersonAddIcon sx={{ fontSize: 40, color: "white" }} />
+            </Box>
+            <Typography
+              sx={{
+                fontSize: 28,
+                fontWeight: 700,
+                color: "#1a1a1a",
+                textAlign: "center",
+              }}>
+              Create Account
+            </Typography>
+            <Typography
+              sx={{ fontSize: 14, color: "#666", mt: 1, textAlign: "center" }}>
+              Join us to get started
+            </Typography>
+          </Box>
 
-          {/* INPUT FIELDS */}
-          <TextField
-            fullWidth
-            label="Name"
-            sx={{
-              mb: 3,
-              "& .MuiInputBase-root": {
+          {authError && (
+            <Alert
+              severity="error"
+              sx={{
+                mb: 3,
                 borderRadius: "12px",
-                background: "rgba(255,255,255,0.85)",
-                backdropFilter: "blur(10px)",
-              },
-            }}
-          />
-
-          <TextField
-            fullWidth
-            label="Email"
-            sx={{
-              mb: 3,
-              "& .MuiInputBase-root": {
+                backgroundColor: "#ffebee",
+                border: "1px solid #ef5350",
+              }}>
+              {authError}
+            </Alert>
+          )}
+          {error && (
+            <Alert
+              severity="error"
+              sx={{
+                mb: 3,
                 borderRadius: "12px",
-                background: "rgba(255,255,255,0.85)",
-                backdropFilter: "blur(10px)",
-              },
-            }}
-          />
+                backgroundColor: "#ffebee",
+                border: "1px solid #ef5350",
+              }}>
+              {error}
+            </Alert>
+          )}
 
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            sx={{
-              mb: 3,
-              "& .MuiInputBase-root": {
+          {/* Form */}
+          <Box
+            component="form"
+            onSubmit={handleSignup}
+            sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+            <TextField
+              fullWidth
+              label="Email Address"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  "& fieldset": {
+                    borderColor: "#e0e0e0",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#f5576c",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#f5576c",
+                    borderWidth: 2,
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  "& fieldset": {
+                    borderColor: "#e0e0e0",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#f5576c",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#f5576c",
+                    borderWidth: 2,
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Confirm Password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  "& fieldset": {
+                    borderColor: "#e0e0e0",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#f5576c",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#f5576c",
+                    borderWidth: 2,
+                  },
+                },
+              }}
+            />
+
+            <Button
+              fullWidth
+              type="submit"
+              disabled={loading}
+              sx={{
+                mt: 2,
+                py: 1.8,
+                fontSize: "16px",
+                fontWeight: 600,
                 borderRadius: "12px",
-                background: "rgba(255,255,255,0.85)",
-                backdropFilter: "blur(10px)",
-              },
-            }}
-          />
+                background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                color: "white",
+                textTransform: "none",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #e07bea 0%, #e3405b 100%)",
+                  boxShadow: "0 12px 24px rgba(245, 87, 108, 0.4)",
+                },
+              }}>
+              {loading ? "Creating account..." : "Sign Up"}
+            </Button>
+          </Box>
 
-          {/* SIGNUP BUTTON */}
-          <Button
-            fullWidth
-            variant="contained"
-            sx={{
-              py: 1.5,
-              mt: 1,
-              borderRadius: "14px",
-              fontSize: "1.05rem",
-              fontWeight: 600,
-              background: "linear-gradient(135deg,#0A84FF,#4AB1FF)",
-              boxShadow: "0 10px 20px rgba(10,132,255,0.35)",
-              "&:hover": {
-                background: "linear-gradient(135deg,#006BE6,#0A84FF)",
-              },
-            }}>
-            Sign Up
-          </Button>
-
-          {/* FOOTER LINK */}
-          <Typography
-            sx={{
-              mt: 3,
-              cursor: "pointer",
-              textAlign: "center",
-              fontSize: "0.95rem",
-              opacity: 0.75,
-              "&:hover": { opacity: 1 },
-            }}
-            onClick={() => (window.location.href = "/login")}>
-            Already have an account? <strong>Login</strong>
-          </Typography>
-        </motion.div>
+          {/* Footer */}
+          <Box sx={{ mt: 4, textAlign: "center" }}>
+            <Typography sx={{ fontSize: 14, color: "#666" }}>
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                sx={{
+                  color: "#f5576c",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  "&:hover": { textDecoration: "underline" },
+                }}>
+                Login
+              </Link>
+            </Typography>
+          </Box>
+        </Box>
       </motion.div>
     </Box>
   );

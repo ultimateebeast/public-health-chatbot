@@ -11,7 +11,6 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
-import { useTheme } from "../context/ThemeContext";
 
 const dailyData = [
   { day: "Mon", queries: 20 },
@@ -28,10 +27,12 @@ const pieData = [
   { name: "Emergency", value: 15 },
 ];
 
-const COLORS = ["#0A84FF", "#23D5AB", "#6B73FF", "#FF7B7B"];
+const COLORS = ["#667eea", "#764ba2", "#0084FF", "#FF6B6B"];
+
+import { useThemeContext } from "../hooks/useThemeContext";
 
 export default function Analytics() {
-  const { mode } = useTheme();
+  const { mode } = useThemeContext();
 
   return (
     <Box
@@ -40,15 +41,15 @@ export default function Analytics() {
         padding: { xs: 2, md: 4 },
         background:
           mode === "light"
-            ? "linear-gradient(135deg,#dce6f7,#eef4ff)"
-            : "linear-gradient(135deg,#0d0d0d,#1a1a1a)",
+            ? "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+            : "linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)",
       }}>
       <Typography
         variant="h4"
         sx={{
           fontWeight: 700,
           mb: 3,
-          color: mode === "light" ? "#111" : "#eee",
+          color: mode === "light" ? "#1a1a1a" : "#f5f5f5",
           textAlign: "center",
         }}>
         Analytics Dashboard 📊
@@ -68,23 +69,18 @@ export default function Analytics() {
           <Paper
             sx={{
               padding: 3,
-              borderRadius: "22px",
-              background:
-                mode === "light"
-                  ? "rgba(255,255,255,0.7)"
-                  : "rgba(40,40,40,0.7)",
-              backdropFilter: "blur(18px)",
-              border:
-                mode === "light"
-                  ? "1px solid rgba(255,255,255,0.3)"
-                  : "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "16px",
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
               height: "350px",
             }}>
             <Typography
               variant="h6"
               sx={{
                 mb: 2,
-                color: mode === "light" ? "#111" : "#eee",
+                color: "#1a1a1a",
                 fontWeight: 600,
               }}>
               Queries per Day
@@ -92,22 +88,20 @@ export default function Analytics() {
 
             <ResponsiveContainer width="100%" height="80%">
               <LineChart data={dailyData}>
-                <XAxis
-                  dataKey="day"
-                  stroke={mode === "light" ? "#222" : "#ddd"}
-                />
-                <YAxis stroke={mode === "light" ? "#222" : "#ddd"} />
+                <XAxis dataKey="day" stroke="#999" />
+                <YAxis stroke="#999" />
                 <Tooltip
                   contentStyle={{
-                    background: mode === "light" ? "#fff" : "#222",
+                    background: "#fff",
                     borderRadius: "10px",
+                    border: "1px solid #e0e0e0",
                   }}
-                  labelStyle={{ color: mode === "light" ? "#000" : "#fff" }}
+                  labelStyle={{ color: "#1a1a1a" }}
                 />
                 <Line
                   type="monotone"
                   dataKey="queries"
-                  stroke="#0A84FF"
+                  stroke="#667eea"
                   strokeWidth={3}
                   dot={{ r: 5 }}
                 />
@@ -123,23 +117,18 @@ export default function Analytics() {
           <Paper
             sx={{
               padding: 3,
-              borderRadius: "22px",
-              background:
-                mode === "light"
-                  ? "rgba(255,255,255,0.7)"
-                  : "rgba(40,40,40,0.7)",
-              backdropFilter: "blur(18px)",
-              border:
-                mode === "light"
-                  ? "1px solid rgba(255,255,255,0.3)"
-                  : "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "16px",
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
               height: "350px",
             }}>
             <Typography
               variant="h6"
               sx={{
                 mb: 2,
-                color: mode === "light" ? "#111" : "#eee",
+                color: "#1a1a1a",
                 fontWeight: 600,
               }}>
               Query Categories
@@ -161,10 +150,11 @@ export default function Analytics() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: mode === "light" ? "#fff" : "#222",
+                    background: "#fff",
                     borderRadius: "10px",
+                    border: "1px solid #e0e0e0",
                   }}
-                  labelStyle={{ color: mode === "light" ? "#000" : "#fff" }}
+                  labelStyle={{ color: "#1a1a1a" }}
                 />
               </PieChart>
             </ResponsiveContainer>

@@ -1,10 +1,11 @@
 import { Box, Button, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
+
+import { useThemeContext } from "../hooks/useThemeContext";
 
 export default function Landing() {
-  const { mode } = useTheme();
+  const { mode } = useThemeContext();
 
   return (
     <Box
@@ -13,8 +14,8 @@ export default function Landing() {
         padding: { xs: "40px 20px", md: "80px 60px" },
         background:
           mode === "light"
-            ? "linear-gradient(to bottom right, #f5f9ff, #e6eeff)"
-            : "linear-gradient(to bottom right, #0d0d0d, #1a1a1a)",
+            ? "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+            : "linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)",
         display: "flex",
         flexDirection: { xs: "column", md: "row" },
         alignItems: "center",
@@ -28,26 +29,26 @@ export default function Landing() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9 }}
         style={{ maxWidth: "600px", zIndex: 2 }}>
-        {/* RESPONSIVE TITLE */}
+        {/* TITLE */}
         <Typography
           variant="h2"
           sx={{
             fontWeight: 800,
             lineHeight: 1.2,
             fontSize: { xs: "2.1rem", md: "3.2rem" },
-            color: mode === "light" ? "#111" : "#fff",
+            color: mode === "light" ? "#1a1a1a" : "#f5f5f5",
             mb: 2,
           }}>
           Smarter Health.
           <br />
-          Powered by <span style={{ color: "#0A84FF" }}>Intelligence.</span>
+          Powered by <span style={{ color: "#667eea" }}>Intelligence.</span>
         </Typography>
 
         {/* DESCRIPTION */}
         <Typography
           sx={{
             fontSize: { xs: "1rem", md: "1.2rem" },
-            color: mode === "light" ? "#333" : "#ccc",
+            color: mode === "light" ? "#666" : "#b0b0b0",
             opacity: 0.9,
             maxWidth: "500px",
             mb: 4,
@@ -64,13 +65,19 @@ export default function Landing() {
               to="/chat"
               variant="contained"
               sx={{
-                background: "linear-gradient(135deg,#0A84FF,#4AB1FF)",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 px: 4,
                 py: 1.6,
                 fontSize: "1.05rem",
                 fontWeight: 600,
                 borderRadius: "12px",
-                boxShadow: "0 8px 25px rgba(0, 132, 255, 0.25)",
+                boxShadow: "0 8px 24px rgba(102, 126, 234, 0.4)",
+                color: "white",
+                textTransform: "none",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #5568d3 0%, #6a3f91 100%)",
+                },
               }}>
               Try Assistant
             </Button>
@@ -86,9 +93,12 @@ export default function Landing() {
                 fontSize: "1.05rem",
                 fontWeight: 600,
                 borderRadius: "12px",
-                border:
-                  mode === "light" ? "1px solid #0A84FF" : "1px solid #4AB1FF",
-                color: mode === "light" ? "#0A84FF" : "#4AB1FF",
+                border: "1px solid #667eea",
+                color: "#667eea",
+                textTransform: "none",
+                "&:hover": {
+                  background: "rgba(102, 126, 234, 0.1)",
+                },
               }}>
               Login
             </Button>
@@ -97,34 +107,20 @@ export default function Landing() {
       </motion.div>
 
       {/* RIGHT FLOATING AI ORB */}
-      <motion.img
-        src="https://img.icons8.com/fluency/240/artificial-intelligence.png"
-        width={350}
+      <motion.div
         style={{
           position: "absolute",
           right: 30,
           bottom: 50,
-          opacity: mode === "light" ? 0.15 : 0.25,
           zIndex: 1,
+          width: 350,
+          height: 350,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          opacity: 0.1,
         }}
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: mode === "light" ? 0.15 : 0.25, scale: 1 }}
-        transition={{ duration: 1.4 }}
-      />
-
-      {/* MOBILE SIZE AI ORB */}
-      <motion.img
-        src="https://img.icons8.com/fluency/96/artificial-intelligence.png"
-        width={120}
-        style={{
-          position: "absolute",
-          right: 10,
-          bottom: 10,
-          opacity: mode === "light" ? 0.2 : 0.35,
-          display: { xs: "block", md: "none" },
-        }}
-        animate={{ y: [0, -8, 0] }}
-        transition={{ repeat: Infinity, duration: 4 }}
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ repeat: Infinity, duration: 8 }}
       />
     </Box>
   );

@@ -1,12 +1,18 @@
 import { Box, TextField, Button, Paper, Typography } from "@mui/material";
 import { motion } from "framer-motion";
+import { useThemeContext } from "../hooks/useThemeContext";
 
 export default function ForgotPassword() {
+  const { mode } = useThemeContext();
+
   return (
     <Box
       sx={{
         height: "100vh",
-        background: "linear-gradient(135deg, #0A84FF, #23D5AB)",
+        background:
+          mode === "light"
+            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            : "linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -21,12 +27,21 @@ export default function ForgotPassword() {
           elevation={0}
           sx={{
             width: 420,
-            padding: 4,
-            borderRadius: "22px",
-            background: "rgba(255,255,255,0.25)",
-            backdropFilter: "blur(18px) saturate(160%)",
-            border: "1px solid rgba(255,255,255,0.40)",
-            boxShadow: "0 12px 35px rgba(0,0,0,0.18)",
+            padding: "50px 40px",
+            borderRadius: "20px",
+            background:
+              mode === "light"
+                ? "rgba(255, 255, 255, 0.95)"
+                : "rgba(35, 35, 35, 0.9)",
+            backdropFilter: "blur(10px)",
+            border:
+              mode === "light"
+                ? "1px solid rgba(255, 255, 255, 0.2)"
+                : "1px solid rgba(102, 126, 234, 0.2)",
+            boxShadow:
+              mode === "light"
+                ? "0 25px 50px rgba(0, 0, 0, 0.15)"
+                : "0 25px 50px rgba(102, 126, 234, 0.2)",
           }}>
           {/* Heading */}
           <Typography
@@ -35,8 +50,7 @@ export default function ForgotPassword() {
               mb: 2,
               fontWeight: 700,
               textAlign: "center",
-              color: "#fff",
-              textShadow: "0 2px 6px rgba(0,0,0,0.2)",
+              color: "#1a1a1a",
             }}>
             Reset Password
           </Typography>
@@ -46,8 +60,8 @@ export default function ForgotPassword() {
               mb: 3,
               fontSize: "0.95rem",
               textAlign: "center",
-              opacity: 0.9,
-              color: "#f1f1f1",
+              opacity: 0.8,
+              color: "#666",
             }}>
             Enter your registered email and we’ll send you a password reset
             link.
@@ -56,12 +70,23 @@ export default function ForgotPassword() {
           {/* Input Email */}
           <TextField
             fullWidth
-            label="Enter your email"
+            label="Email Address"
+            type="email"
             sx={{
               mb: 3,
-              background: "rgba(255,255,255,0.75)",
-              borderRadius: "12px",
-              "& fieldset": { border: "none" },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "12px",
+                "& fieldset": {
+                  borderColor: "#e0e0e0",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#667eea",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#667eea",
+                  borderWidth: 2,
+                },
+              },
             }}
           />
 
@@ -70,28 +95,45 @@ export default function ForgotPassword() {
             fullWidth
             variant="contained"
             sx={{
-              py: 1.5,
+              py: 1.8,
               fontSize: "1rem",
-              background: "#007AFF",
+              fontWeight: 600,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               borderRadius: "12px",
-              boxShadow: "0 6px 18px rgba(0,122,255,0.35)",
-              "&:hover": { background: "#0063D9" },
+              boxShadow: "0 8px 24px rgba(102, 126, 234, 0.3)",
+              textTransform: "none",
+              color: "white",
+              "&:hover": {
+                background: "linear-gradient(135deg, #5568d3 0%, #6a3f91 100%)",
+                boxShadow: "0 12px 32px rgba(102, 126, 234, 0.4)",
+              },
             }}>
             Send Reset Link
           </Button>
 
-          {/* Back to login */}
+          {/* Back to Login */}
           <Typography
             sx={{
               mt: 3,
               textAlign: "center",
-              color: "#fff",
-              opacity: 0.9,
-              cursor: "pointer",
-              "&:hover": { opacity: 1 },
-            }}
-            onClick={() => (window.location.href = "/login")}>
-            Back to Login
+              fontSize: "0.9rem",
+              color: "#666",
+            }}>
+            Remember your password?{" "}
+            <Box
+              component="a"
+              href="/login"
+              sx={{
+                color: "#667eea",
+                fontWeight: 600,
+                textDecoration: "none",
+                cursor: "pointer",
+                "&:hover": {
+                  textDecoration: "underline",
+                },
+              }}>
+              Back to Login
+            </Box>
           </Typography>
         </Paper>
       </motion.div>
