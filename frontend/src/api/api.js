@@ -1,15 +1,6 @@
 const BASE_URL = "http://127.0.0.1:8000";
 
 export const api = {
-  signup: async (data) => {
-    const res = await fetch(`${BASE_URL}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return res.json();
-  },
-
   login: async (data) => {
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
@@ -19,14 +10,29 @@ export const api = {
     return res.json();
   },
 
-  chat: async (message, token) => {
-    const res = await fetch(`${BASE_URL}/chat/`, {
+  createChat: async (token) => {
+    const res = await fetch(`${BASE_URL}/chat/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`, // 🔥 IMPORTANT
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ title: "New Chat" }),
+    });
+    return res.json();
+  },
+
+  sendMessage: async (chatId, message, token) => {
+    const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // 🔥 IMPORTANT
+      },
+      body: JSON.stringify({
+        message: message,
+        language: "en",
+      }),
     });
     return res.json();
   },

@@ -22,7 +22,15 @@ export default function Login() {
     setError("");
 
     try {
-      await login(email, password);
+      const res = await login(email, password);
+
+      // 🔥 ADD THIS (CRITICAL FIX)
+      if (res?.access_token) {
+        localStorage.setItem("token", res.access_token);
+      } else {
+        throw new Error("Token not received");
+      }
+
       window.location.href = "/dashboard";
     } catch (err) {
       const errorMessage = err.message || "Login failed";

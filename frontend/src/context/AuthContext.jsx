@@ -48,19 +48,37 @@ export default function AuthProvider({ children }) {
     return errorMap[errorCode] || error.message || "Authentication error";
   };
 
-  const login = async (email, password) => {
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      setError(null);
-      return result;
-    } catch (err) {
-      const friendlyError = getErrorMessage(err);
-      setError(friendlyError);
-      const errorToThrow = new Error(friendlyError);
-      errorToThrow.code = err.code;
-      throw errorToThrow;
+const login = async (email, password) => {
+  try {
+    // 🟢 Step 1: Firebase login
+    const firebaseRes = await signInWithEmailAndPassword(auth, email, password);
+
+    // 🟢 Step 2: Call YOUR BACKEND login API
+    const res = await fetch("http://127.0.0.1:8000/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    // 🔥 Step 3: Store backend token (CRITICAL)
+    if (data?.access_token) {
+      localStorage.setItem("token", data.access_token);
+    } else {
+      throw new Error("Backend token not received");
     }
-  };
+
+    setError(null);
+    return data;
+  } catch (err) {
+    const friendlyError = getErrorMessage(err);
+    setError(friendlyError);
+    throw new Error(friendlyError);
+  }
+};
 
   const signup = async (email, password) => {
     try {

@@ -25,7 +25,7 @@ class UserProfile(BaseModel):
     last_login_at: Optional[datetime]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserUpdate(BaseModel):
     display_name: Optional[str] = None
@@ -38,7 +38,7 @@ class UserPreferences(BaseModel):
     language: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ============= AUTH SCHEMAS =============
 
@@ -63,15 +63,17 @@ class ResetPasswordRequest(BaseModel):
 # ============= CHAT SCHEMAS =============
 
 class ChatMessage(BaseModel):
-    sender: str  # "user" or "ai"
+    sender: str
     content: str
     timestamp: datetime
     intent: Optional[str] = None
     sentiment: Optional[str] = None
     emergency_flag: Optional[bool] = False
 
+
 class ChatHistoryCreate(BaseModel):
     title: Optional[str] = None
+
 
 class ChatHistoryResponse(BaseModel):
     id: int
@@ -81,14 +83,16 @@ class ChatHistoryResponse(BaseModel):
     total_messages: int
     created_at: datetime
     updated_at: datetime
-    
-    class Config:
-        orm_mode = True
 
+    class Config:
+        from_attributes = True   # ✅ FIXED (pydantic v2)
+
+
+# ✅ FIXED REQUEST (REMOVED user_id)
 class ChatMessageRequest(BaseModel):
     message: str
-    user_id: int
     language: Optional[str] = "en"
+
 
 class ChatMessageResponse(BaseModel):
     reply: str
@@ -115,7 +119,7 @@ class HealthReportResponse(BaseModel):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ============= ANALYTICS SCHEMAS =============
 
