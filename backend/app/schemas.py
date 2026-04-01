@@ -85,22 +85,26 @@ class ChatHistoryResponse(BaseModel):
     updated_at: datetime
 
     class Config:
-        from_attributes = True   # ✅ FIXED (pydantic v2)
+        from_attributes = True
 
 
-# ✅ FIXED REQUEST (REMOVED user_id)
 class ChatMessageRequest(BaseModel):
     message: str
     language: Optional[str] = "en"
 
 
+# 🔥 NEW PROFESSIONAL RESPONSE
 class ChatMessageResponse(BaseModel):
     reply: str
     intent: str
     sentiment: str
     risk_level: str
     emergency: bool
+    confidence: float
     recommendations: Optional[List[str]] = None
+    
+    # ✅ ADD THIS
+    other_predictions: Optional[List[Dict[str, Any]]] = []
 
 # ============= HEALTH REPORT SCHEMAS =============
 

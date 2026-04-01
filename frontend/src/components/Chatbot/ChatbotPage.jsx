@@ -1,77 +1,141 @@
 import { useState, useRef, useEffect } from "react";
-import { Box, Typography, TextField, IconButton } from "@mui/material";
+import { Box, TextField, IconButton, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import MicIcon from "@mui/icons-material/Mic";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import { motion } from "framer-motion";
-import gsap from "gsap";
-import ReactMarkdown from "react-markdown";
+import { useThemeContext } from "../../hooks/useThemeContext";
+import { api } from "../../api/api";
 
-export default function ChatbotPage() {
-  const [messages, setMessages] = useState([
-    {
-      sender: "ai",
-      text: "👋 **Welcome!**\nI'm your **Public Health Assistant**.\n\nHow can I help you today?",
-    },
-  ]);
+// Typing animation
+const TypingIndicator = () => (
+  <Box sx={{ display: "flex", gap: 0.6, alignItems: "center" }}>
+    {[0, 1, 2].map((i) => (
+      <motion.div
+        key={i}
+        animate={{ y: [0, -8, 0] }}
+        transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }}>
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            backgroundColor: "#666",
+          }}
+        />
+      </motion.div>
+    ))}
+  </Box>
+);
 
+export default function ChatbotUI() {
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [typing, setTyping] = useState(false);
-  const messagesEndRef = useRef(null);
-  const messageRefs = useRef([]);
+  const [loading, setLoading] = useState(false);
+  const [chatId, setChatId] = useState(null);
 
-  // Auto-scroll
+  const messagesEndRef = useRef(null);
+  const { mode } = useThemeContext();
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
-    // Animate new messages
-    if (messageRefs.current.length > 0) {
-      const last = messageRefs.current[messageRefs.current.length - 1];
-      if (last) {
-        gsap.from(last, {
-          y: 20,
-          opacity: 0,
-          duration: 0.5,
-          ease: "power3.out",
-        });
-      }
-    }
-  }, [messages, typing]);
-
-  // Send message
+  // 🔥 SEND MESSAGE
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMsg = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const userText = input;
 
-    const prompt = input;
+    setMessages((prev) => [...prev, { from: "user", text: userText }]);
     setInput("");
-    setTyping(true);
+    setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: prompt }),
-      });
+      let currentChatId = chatId;
 
-      const data = await res.json();
-      setTyping(false);
+      // Create chat if not exists
+      if (!currentChatId) {
+        const chat = await api.createChat();
+        currentChatId = chat.id;
+        setChatId(chat.id);
+      }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          text: data.reply || "⚠️ Sorry, I couldn't understand.",
-        },
-      ]);
-    } catch (error) {
-      setTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "ai", text: "❌ Server error. Try again later." },
-      ]);
+      // Send message
+      const res = await api.sendMessage(currentChatId, userText);
+
+      // 🔥 STORE FULL OBJECT (NOT STRING)
+      setMessages((prev) => [...prev, { from: "ai", data: res }]);
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [...prev, { from: "ai", error: true }]);
     }
+
+    setLoading(false);
+  };
+
+  // 🔥 AI CARD UI
+  const renderAIResponse = (data) => {
+    if (!data) return null;
+
+    return (
+      <Box
+        sx={{
+          background: mode === "light" ? "#f4f6ff" : "#2a2a2a",
+          borderRadius: 3,
+          p: 2,
+          maxWidth: "80%",
+        }}>
+        {/* MAIN RESULT */}
+        <Typography fontWeight={700} color="primary">
+          🦠 {data.reply}
+        </Typography>
+
+        <Typography fontSize={13}>Confidence: {data.confidence}%</Typography>
+
+        {/* PROGRESS BAR */}
+        <Box
+          sx={{
+            height: 6,
+            background: "#ddd",
+            borderRadius: 5,
+            mt: 1,
+          }}>
+          <Box
+            sx={{
+              width: `${data.confidence}%`,
+              height: "100%",
+              background: "#667eea",
+              borderRadius: 5,
+            }}
+          />
+        </Box>
+
+        {/* OTHER PREDICTIONS */}
+        {data.other_predictions?.length > 0 && (
+          <Box mt={2}>
+            <Typography fontSize={12} color="text.secondary">
+              Other possibilities:
+            </Typography>
+
+            {data.other_predictions.map((p, i) => (
+              <Typography key={i} fontSize={13}>
+                • {p.disease} ({p.confidence}%)
+              </Typography>
+            ))}
+          </Box>
+        )}
+
+        {/* RECOMMENDATIONS */}
+        {data.recommendations?.length > 0 && (
+          <Box mt={2}>
+            <Typography fontSize={12} color="green">
+              💡 {data.recommendations.join(", ")}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   return (
@@ -80,162 +144,85 @@ export default function ChatbotPage() {
         height: "100vh",
         display: "flex",
         justifyContent: "center",
-        background: "linear-gradient(135deg,#0A84FF,#23D5AB)",
-        padding: { xs: 1, md: 3 },
+        alignItems: "center",
+        p: 2,
       }}>
-      {/* MAIN CHAT GLASS CONTAINER */}
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8 }}
-        style={{
-          width: "100%",
-          maxWidth: "800px",
-          height: "100%",
-          background: "rgba(255,255,255,0.22)",
-          backdropFilter: "blur(20px)",
-          borderRadius: "28px",
-          border: "1px solid rgba(255,255,255,0.35)",
-          boxShadow: "0 20px 45px rgba(0,0,0,0.20)",
+      <Box
+        sx={{
+          width: "90vw",
+          maxWidth: 600,
+          height: "85vh",
           display: "flex",
           flexDirection: "column",
+          borderRadius: 3,
           overflow: "hidden",
+          background: mode === "light" ? "#fff" : "#1e1e1e",
         }}>
         {/* HEADER */}
         <Box
           sx={{
-            padding: { xs: "10px 14px", md: "14px 22px" },
-            borderBottom: "1px solid rgba(255,255,255,0.35)",
+            p: 2,
             display: "flex",
-            alignItems: "center",
-            gap: 2,
+            gap: 1,
+            bgcolor: "#667eea",
+            color: "white",
           }}>
-          <motion.img
-            src="https://img.icons8.com/fluency/96/artificial-intelligence.png"
-            width={50}
-            height={50}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          />
-
-          <Box>
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: { xs: "1rem", md: "1.2rem" },
-              }}>
-              Public Health Assistant
-            </Typography>
-            <Typography sx={{ opacity: 0.7, fontSize: "0.8rem" }}>
-              Powered by PHA
-            </Typography>
-          </Box>
+          <SmartToyIcon />
+          <Typography fontWeight={700}>Health Assistant</Typography>
         </Box>
 
-        {/* CHAT AREA */}
-        <Box
-          sx={{
-            flex: 1,
-            overflowY: "auto",
-            padding: { xs: 1.5, md: 3 },
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            minHeight: 0, // SUPER IMPORTANT!
-          }}>
-          {messages.map((msg, i) => (
-            <div
+        {/* CHAT */}
+        <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+          {messages.map((m, i) => (
+            <Box
               key={i}
-              ref={(el) => (messageRefs.current[i] = el)}
-              style={{
+              sx={{
                 display: "flex",
-                justifyContent:
-                  msg.sender === "user" ? "flex-end" : "flex-start",
+                justifyContent: m.from === "user" ? "flex-end" : "flex-start",
+                mb: 1,
               }}>
-              <Box
-                sx={{
-                  maxWidth: { xs: "85%", md: "70%" },
-                  padding: "12px 18px",
-                  borderRadius: "18px",
-                  background:
-                    msg.sender === "user"
-                      ? "linear-gradient(135deg,#0078FF,#0AA2FF)"
-                      : "rgba(255,255,255,0.85)",
-                  color: msg.sender === "user" ? "#fff" : "#000",
-                  boxShadow:
-                    msg.sender === "user"
-                      ? "0 6px 18px rgba(0,123,255,0.35)"
-                      : "0 6px 18px rgba(0,0,0,0.10)",
-                  wordBreak: "break-word",
-                  fontSize: { xs: "0.9rem", md: "1rem" },
-                }}>
-                <ReactMarkdown>{msg.text}</ReactMarkdown>
-              </Box>
-            </div>
+              {m.from === "user" ? (
+                <Box
+                  sx={{
+                    bgcolor: "#667eea",
+                    color: "white",
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                  }}>
+                  {m.text}
+                </Box>
+              ) : m.error ? (
+                <Box sx={{ color: "red" }}>❌ Error fetching response</Box>
+              ) : (
+                renderAIResponse(m.data)
+              )}
+            </Box>
           ))}
 
-          {typing && (
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ repeat: Infinity }}>
-              <Box
-                sx={{
-                  background: "rgba(255,255,255,0.6)",
-                  backdropFilter: "blur(8px)",
-                  padding: "10px 20px",
-                  borderRadius: "20px",
-                  width: "80px",
-                }}>
-                typing...
-              </Box>
-            </motion.div>
-          )}
-
+          {loading && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </Box>
 
-        {/* INPUT AREA — FIXED AT BOTTOM */}
-        <Box
-          sx={{
-            padding: { xs: "10px", md: "14px" },
-            borderTop: "1px solid rgba(255,255,255,0.3)",
-            display: "flex",
-            gap: 1,
-            alignItems: "center",
-          }}>
-          <IconButton
-            sx={{
-              background: "rgba(255,255,255,0.55)",
-              width: { xs: 40, md: 45 },
-              height: { xs: 40, md: 45 },
-            }}>
+        {/* INPUT */}
+        <Box sx={{ p: 2, display: "flex", gap: 1 }}>
+          <IconButton>
             <MicIcon />
           </IconButton>
 
           <TextField
             fullWidth
-            placeholder="Ask your question…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            sx={{
-              background: "rgba(255,255,255,0.8)",
-              borderRadius: "14px",
-              "& fieldset": { border: "none" },
-            }}
+            placeholder="Ask about your health..."
           />
 
-          <IconButton
-            onClick={sendMessage}
-            sx={{
-              background: "#0078FF",
-              width: { xs: 40, md: 45 },
-              height: { xs: 40, md: 45 },
-            }}>
-            <SendIcon sx={{ color: "#fff" }} />
+          <IconButton onClick={sendMessage} disabled={loading}>
+            <SendIcon />
           </IconButton>
         </Box>
-      </motion.div>
+      </Box>
     </Box>
   );
 }

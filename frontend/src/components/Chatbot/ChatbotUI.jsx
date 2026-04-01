@@ -5,11 +5,11 @@ import MicIcon from "@mui/icons-material/Mic";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import { motion } from "framer-motion";
 import { useThemeContext } from "../../hooks/useThemeContext";
-import { api } from "../../api/api"; // ✅ IMPORTANT
+import { api } from "../../api/api";
 
-// Typing animation
+// ================= TYPING =================
 const TypingIndicator = () => (
-  <Box sx={{ display: "flex", gap: 0.6, alignItems: "center" }}>
+  <Box sx={{ display: "flex", gap: 0.6 }}>
     {[0, 1, 2].map((i) => (
       <motion.div
         key={i}
@@ -20,7 +20,7 @@ const TypingIndicator = () => (
             width: 8,
             height: 8,
             borderRadius: "50%",
-            backgroundColor: "#666",
+            backgroundColor: "#888",
           }}
         />
       </motion.div>
@@ -37,20 +37,16 @@ export default function ChatbotUI() {
   const messagesEndRef = useRef(null);
   const { mode } = useThemeContext();
 
-  const token = localStorage.getItem("token"); // ⚠️ Ensure token exists
-
-  // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // ✅ FINAL SEND MESSAGE FUNCTION
+  // ================= SEND MESSAGE =================
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userText = input;
 
-    // Add user message
     setMessages((prev) => [...prev, { from: "user", text: userText }]);
     setInput("");
     setLoading(true);
@@ -58,128 +54,192 @@ export default function ChatbotUI() {
     try {
       let currentChatId = chatId;
 
-      // 🟢 Step 1: Create chat if not exists
+      // CREATE CHAT
       if (!currentChatId) {
-        const chat = await api.createChat(token);
+        const chat = await api.createChat();
         currentChatId = chat.id;
         setChatId(chat.id);
       }
 
-      // 🟢 Step 2: Send message
-      const res = await api.sendMessage(currentChatId, userText, token);
+      // SEND MESSAGE
+      const res = await api.sendMessage(currentChatId, userText);
 
-      // 🟢 Step 3: Add AI response
-      setMessages((prev) => [
-        ...prev,
-        { from: "ai", text: res.reply || "⚠️ No response from AI" },
-      ]);
+      // ✅ SAFE RESPONSE STRUCTURE
+      const safeData = {
+        reply: res?.reply || "No response",
+        confidence: Number(res?.confidence || 0),
+        other_predictions: res?.other_predictions || [],
+        recommendations: res?.recommendations || [],
+        risk_level: res?.risk_level || "low",
+        emergency: res?.emergency || false,
+      };
+
+      setMessages((prev) => [...prev, { from: "ai", data: safeData }]);
+
+      // 🔥🔥🔥 LIVE ANALYTICS TRIGGER (IMPORTANT)
+      window.dispatchEvent(new Event("analyticsUpdated"));
     } catch (err) {
-      console.error("Chat error:", err);
-
-      setMessages((prev) => [
-        ...prev,
-        { from: "ai", text: "❌ Error: Could not get a response." },
-      ]);
+      console.error(err);
+      setMessages((prev) => [...prev, { from: "ai", error: true }]);
     }
 
     setLoading(false);
+  };
+
+  // ================= AI CARD =================
+  const renderAIResponse = (data) => {
+    if (!data) return null;
+
+    return (
+      <Box
+        sx={{
+          background: mode === "light" ? "#f4f6ff" : "#2a2a2a",
+          borderRadius: 3,
+          p: 2,
+          maxWidth: "85%",
+          boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
+        }}>
+        <Typography fontWeight={700} color="primary">
+          🦠 {data.reply}
+        </Typography>
+
+        <Typography mt={1} fontSize={13}>
+          ⚠️ Risk: <b>{data.risk_level}</b>
+        </Typography>
+
+        {data.emergency && (
+          <Typography color="red" fontSize={13}>
+            🚨 Emergency detected! Seek medical help.
+          </Typography>
+        )}
+
+        <Typography fontSize={13} mt={1}>
+          📊 Confidence: {data.confidence.toFixed(2)}%
+        </Typography>
+
+        <Box sx={{ height: 6, background: "#ddd", borderRadius: 5, mt: 1 }}>
+          <Box
+            sx={{
+              width: `${data.confidence}%`,
+              height: "100%",
+              background: "#667eea",
+              borderRadius: 5,
+            }}
+          />
+        </Box>
+
+        {data.other_predictions.length > 0 && (
+          <Box mt={2}>
+            <Typography fontSize={12} color="text.secondary">
+              🔍 Other possibilities:
+            </Typography>
+
+            {data.other_predictions.map((p, i) => (
+              <Typography key={i} fontSize={13}>
+                • {p.disease} ({p.confidence}%)
+              </Typography>
+            ))}
+          </Box>
+        )}
+
+        {data.recommendations.length > 0 && (
+          <Box mt={2}>
+            {data.recommendations.map((rec, i) => (
+              <Typography key={i} fontSize={13} color="green">
+                💡 {rec}
+              </Typography>
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   return (
     <Box
       sx={{
         height: "100vh",
-        background:
-          mode === "light"
-            ? "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
-            : "linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)",
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
-        padding: 2,
+        alignItems: "center",
+        p: 2,
       }}>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Box
+        sx={{
+          width: "90vw",
+          maxWidth: 600,
+          height: "85vh",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 3,
+          overflow: "hidden",
+          background: mode === "light" ? "#fff" : "#1e1e1e",
+        }}>
+        {/* HEADER */}
         <Box
           sx={{
-            width: "90vw",
-            maxWidth: 600,
-            height: "85vh",
-            borderRadius: "20px",
-            background: mode === "light" ? "#fff" : "#1e1e1e",
+            p: 2,
             display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
+            gap: 1,
+            bgcolor: "#667eea",
+            color: "white",
           }}>
-          {/* HEADER */}
-          <Box
-            sx={{
-              background: "linear-gradient(135deg, #667eea, #764ba2)",
-              color: "white",
-              padding: "20px",
-              display: "flex",
-              gap: 2,
-            }}>
-            <SmartToyIcon />
-            <Box>
-              <Typography fontWeight={700}>Health Assistant</Typography>
-              <Typography fontSize={12}>Always here to help</Typography>
-            </Box>
-          </Box>
+          <SmartToyIcon />
+          <Typography fontWeight={700}>Health Assistant</Typography>
+        </Box>
 
-          {/* MESSAGES */}
-          <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
-            {messages.map((m, i) => (
-              <Box
-                key={i}
-                sx={{
-                  display: "flex",
-                  justifyContent: m.from === "user" ? "flex-end" : "flex-start",
-                  mb: 1,
-                }}>
+        {/* CHAT */}
+        <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+          {messages.map((m, i) => (
+            <Box
+              key={i}
+              sx={{
+                display: "flex",
+                justifyContent: m.from === "user" ? "flex-end" : "flex-start",
+                mb: 1,
+              }}>
+              {m.from === "user" ? (
                 <Box
                   sx={{
+                    bgcolor: "#667eea",
+                    color: "white",
                     px: 2,
                     py: 1,
                     borderRadius: 2,
-                    background:
-                      m.from === "user"
-                        ? "#667eea"
-                        : mode === "light"
-                          ? "#eee"
-                          : "#444",
-                    color: m.from === "user" ? "white" : "inherit",
                   }}>
                   {m.text}
                 </Box>
-              </Box>
-            ))}
+              ) : m.error ? (
+                <Box sx={{ color: "red" }}>❌ Error fetching response</Box>
+              ) : (
+                renderAIResponse(m.data)
+              )}
+            </Box>
+          ))}
 
-            {loading && <TypingIndicator />}
-            <div ref={messagesEndRef} />
-          </Box>
-
-          {/* INPUT */}
-          <Box sx={{ p: 2, display: "flex", gap: 1 }}>
-            <IconButton>
-              <MicIcon />
-            </IconButton>
-
-            <TextField
-              fullWidth
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
-              }}
-              placeholder="Ask about your health..."
-            />
-
-            <IconButton onClick={sendMessage} disabled={loading}>
-              <SendIcon />
-            </IconButton>
-          </Box>
+          {loading && <TypingIndicator />}
+          <div ref={messagesEndRef} />
         </Box>
-      </motion.div>
+
+        {/* INPUT */}
+        <Box sx={{ p: 2, display: "flex", gap: 1 }}>
+          <IconButton>
+            <MicIcon />
+          </IconButton>
+
+          <TextField
+            fullWidth
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Ask about your health..."
+          />
+
+          <IconButton onClick={sendMessage} disabled={loading}>
+            <SendIcon />
+          </IconButton>
+        </Box>
+      </Box>
     </Box>
   );
 }

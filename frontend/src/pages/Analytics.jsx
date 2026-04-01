@@ -1,166 +1,193 @@
-import { Box, Paper, Typography } from "@mui/material";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
   PieChart,
   Pie,
   Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  LineChart,
+  Line,
   ResponsiveContainer,
 } from "recharts";
 
-const dailyData = [
-  { day: "Mon", queries: 20 },
-  { day: "Tue", queries: 35 },
-  { day: "Wed", queries: 50 },
-  { day: "Thu", queries: 40 },
-  { day: "Fri", queries: 60 },
-];
-
-const pieData = [
-  { name: "Symptoms", value: 40 },
-  { name: "Medicines", value: 25 },
-  { name: "Diseases", value: 20 },
-  { name: "Emergency", value: 15 },
-];
-
-const COLORS = ["#667eea", "#764ba2", "#0084FF", "#FF6B6B"];
-
-import { useThemeContext } from "../hooks/useThemeContext";
+const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7c7c", "#00c49f"];
 
 export default function Analytics() {
-  const { mode } = useThemeContext();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ================= FETCH =================
+  const fetchAnalytics = async () => {
+    try {
+      const res = await axios.get(
+        "http://127.0.0.1:8000/analytics/full-dashboard",
+      );
+      setData(res.data);
+    } catch (err) {
+      console.error("Analytics error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ================= EFFECT =================
+  useEffect(() => {
+    fetchAnalytics();
+
+    // 🔥 AUTO REFRESH (fallback)
+    const interval = setInterval(fetchAnalytics, 5000);
+
+    // 🔥 LIVE EVENT (from Chat)
+    const handler = () => fetchAnalytics();
+    window.addEventListener("analyticsUpdated", handler);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("analyticsUpdated", handler);
+    };
+  }, []);
+
+  // ================= LOADING =================
+  if (loading) {
+    return (
+      <div style={{ color: "white", padding: "20px" }}>
+        📊 Loading analytics...
+      </div>
+    );
+  }
+
+  // ================= SAFE DATA =================
+  const diseaseDist = data?.disease_distribution || {};
+  const sentimentDist = data?.sentiment_distribution || {};
+  const riskDist = data?.risk_distribution || {};
+  const dailyUsage = data?.daily_usage || {};
+
+  const toChartData = (obj) =>
+    Object.entries(obj).map(([name, value]) => ({ name, value }));
+
+  const diseaseData = toChartData(diseaseDist);
+  const sentimentData = toChartData(sentimentDist);
+  const riskData = toChartData(riskDist);
+  const dailyData = toChartData(dailyUsage);
+
+  // ================= EMPTY STATE =================
+  const noData =
+    diseaseData.length === 0 &&
+    sentimentData.length === 0 &&
+    riskData.length === 0;
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        padding: { xs: 2, md: 4 },
-        background:
-          mode === "light"
-            ? "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
-            : "linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)",
-      }}>
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 700,
-          mb: 3,
-          color: mode === "light" ? "#1a1a1a" : "#f5f5f5",
-          textAlign: "center",
+    <div style={{ padding: "20px", color: "white" }}>
+      <h2>📊 Analytics Dashboard</h2>
+
+      {/* ===== SUMMARY CARDS ===== */}
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          flexWrap: "wrap",
+          marginBottom: "20px",
         }}>
-        Analytics Dashboard 📊
-      </Typography>
+        <div style={cardStyle}>
+          <h4>Total Queries</h4>
+          <p>{data?.total_queries || 0}</p>
+        </div>
 
-      {/* GRID CONTAINER */}
-      <Box
-        sx={{
-          display: "grid",
-          gap: 4,
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-        }}>
-        {/* LINE CHART CARD */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}>
-          <Paper
-            sx={{
-              padding: 3,
-              borderRadius: "16px",
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
-              height: "350px",
-            }}>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                color: "#1a1a1a",
-                fontWeight: 600,
-              }}>
-              Queries per Day
-            </Typography>
+        <div style={cardStyle}>
+          <h4>Avg Confidence</h4>
+          <p>{data?.avg_confidence?.toFixed(2) || 0}%</p>
+        </div>
 
-            <ResponsiveContainer width="100%" height="80%">
-              <LineChart data={dailyData}>
-                <XAxis dataKey="day" stroke="#999" />
-                <YAxis stroke="#999" />
-                <Tooltip
-                  contentStyle={{
-                    background: "#fff",
-                    borderRadius: "10px",
-                    border: "1px solid #e0e0e0",
-                  }}
-                  labelStyle={{ color: "#1a1a1a" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="queries"
-                  stroke="#667eea"
-                  strokeWidth={3}
-                  dot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Paper>
-        </motion.div>
+        <div style={cardStyle}>
+          <h4>Emergency Cases</h4>
+          <p>{data?.emergency_cases || 0}</p>
+        </div>
+      </div>
 
-        {/* PIE CHART CARD */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}>
-          <Paper
-            sx={{
-              padding: 3,
-              borderRadius: "16px",
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
-              height: "350px",
-            }}>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                color: "#1a1a1a",
-                fontWeight: 600,
-              }}>
-              Query Categories
-            </Typography>
+      {noData && (
+        <p style={{ color: "#aaa" }}>
+          ⚠️ No analytics data yet. Send some chat messages first.
+        </p>
+      )}
 
-            <ResponsiveContainer width="100%" height="80%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label>
-                  {pieData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "#fff",
-                    borderRadius: "10px",
-                    border: "1px solid #e0e0e0",
-                  }}
-                  labelStyle={{ color: "#1a1a1a" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
-        </motion.div>
-      </Box>
-    </Box>
+      {/* ===== DISEASE ===== */}
+      <h3>🦠 Disease Distribution</h3>
+      {diseaseData.length === 0 ? (
+        <p>No data yet</p>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie data={diseaseData} dataKey="value" outerRadius={100} label>
+              {diseaseData.map((_, i) => (
+                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+
+      {/* ===== RISK ===== */}
+      <h3>⚠️ Risk Distribution</h3>
+      {riskData.length === 0 ? (
+        <p>No data yet</p>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={riskData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="value" fill="#ff4d4f" />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+
+      {/* ===== SENTIMENT ===== */}
+      <h3>😊 Sentiment</h3>
+      {sentimentData.length === 0 ? (
+        <p>No data yet</p>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie data={sentimentData} dataKey="value" outerRadius={100} label>
+              {sentimentData.map((_, i) => (
+                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+
+      {/* ===== DAILY ===== */}
+      <h3>📅 Daily Usage</h3>
+      {dailyData.length === 0 ? (
+        <p>No data yet</p>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={dailyData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="value" stroke="#82ca9d" />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 }
+
+// ================= CARD STYLE =================
+const cardStyle = {
+  background: "#1f1f2e",
+  padding: "15px",
+  borderRadius: "10px",
+  minWidth: "150px",
+};
