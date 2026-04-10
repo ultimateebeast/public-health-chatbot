@@ -1,9 +1,37 @@
-import { Box, TextField, Button, Paper, Typography, Link } from "@mui/material";
+import { useState } from "react";
+import axios from "axios";
+import { Box, TextField, Button, Paper, Typography, Link, Alert, CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
 import { useThemeContext } from "../hooks/useThemeContext";
 
+import { auth } from "../firebase/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
+
 export default function ForgotPassword() {
   const { mode } = useThemeContext();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) {
+       setError("Please enter your email.");
+       return;
+    }
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setMessage("Password reset link natively dispatched to your email via Firebase Auth.");
+    } catch (err) {
+      setError(err.message || "Failed to send reset email.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box
@@ -17,13 +45,14 @@ export default function ForgotPassword() {
         justifyContent: "center",
         padding: 3,
       }}>
-      {/* Glass Card Animation */}
       <motion.div
         initial={{ scale: 0.92, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}>
         <Paper
           elevation={0}
+          component="form"
+          onSubmit={handleSubmit}
           sx={{
             width: 420,
             padding: "50px 40px",
@@ -33,7 +62,6 @@ export default function ForgotPassword() {
             border: mode === "light" ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid rgba(255, 255, 255, 0.05)",
             boxShadow: mode === "light" ? "0 25px 50px rgba(0, 0, 0, 0.15)" : "0 25px 50px rgba(0, 0, 0, 0.5)",
           }}>
-          {/* Heading */}
           <Typography
             variant="h4"
             sx={{
@@ -56,11 +84,16 @@ export default function ForgotPassword() {
             link to get back into the engine.
           </Typography>
 
-          {/* Input Email */}
+          {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+          {message && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{message}</Alert>}
+
           <TextField
             fullWidth
             label="Email Address"
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
             sx={{
               mb: 3,
               "& label": { color: mode === "light" ? "#555" : "#aaa" },
@@ -75,9 +108,10 @@ export default function ForgotPassword() {
             }}
           />
 
-          {/* Submit Button */}
           <Button
+            type="submit"
             fullWidth
+            disabled={loading}
             variant="contained"
             sx={{
               py: 1.8,
@@ -93,10 +127,9 @@ export default function ForgotPassword() {
                 boxShadow: "0 12px 32px rgba(102, 126, 234, 0.4)",
               },
             }}>
-            Send Reset Link
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Send Reset Link"}
           </Button>
 
-          {/* Back to Login */}
           <Typography
             sx={{
               mt: 4,
