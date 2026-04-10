@@ -303,7 +303,7 @@ export default function Dashboard() {
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 3 }}>
         {[
           { title: "Total Queries", value: data?.total_queries !== undefined ? data.total_queries : "-", subtitle: "Lifetime queries processed" },
-          { title: "Avg Confidence", value: data?.avg_confidence ? `${data.avg_confidence.toFixed(1)}%` : "-", subtitle: "Gemini Model Certainty" },
+          { title: "Avg Confidence", value: data?.avg_confidence ? `${data.avg_confidence.toFixed(1)}%` : "-", subtitle: "A.I Model Certainty" },
           { title: "Emergency Cases", value: data?.emergency_cases !== undefined ? data.emergency_cases : "-", subtitle: "Flagged critical situations" },
           { title: "Active Users", value: "8.2K", subtitle: "Global network" },
         ].map((card, index) => (
