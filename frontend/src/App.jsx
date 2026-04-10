@@ -7,11 +7,34 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ChatbotPage from "./pages/Chatbot";
-import Analytics from "./pages/Analytics";
 import Profile from "./pages/Profile";
+
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
+
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+    h1: { fontFamily: '"Poppins", "Inter", sans-serif', fontWeight: 800 },
+    h2: { fontFamily: '"Poppins", "Inter", sans-serif', fontWeight: 800 },
+    h3: { fontFamily: '"Poppins", "Inter", sans-serif', fontWeight: 700 },
+    h4: { fontFamily: '"Poppins", "Inter", sans-serif', fontWeight: 700 },
+    h5: { fontFamily: '"Poppins", "Inter", sans-serif', fontWeight: 600 },
+    h6: { fontFamily: '"Poppins", "Inter", sans-serif', fontWeight: 600 },
+    button: { fontFamily: '"Inter", sans-serif', textTransform: 'none' },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+  },
+});
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -43,15 +66,6 @@ function AnimatedRoutes() {
         />
 
         <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <Analytics />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/profile"
           element={
             <ProtectedRoute>
@@ -66,9 +80,11 @@ function AnimatedRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <AnimatedRoutes />
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Navbar />
+        <AnimatedRoutes />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

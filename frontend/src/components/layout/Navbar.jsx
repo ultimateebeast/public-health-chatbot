@@ -18,7 +18,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import HomeIcon from "@mui/icons-material/Home";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ChatIcon from "@mui/icons-material/Chat";
-import AnalyticsIcon from "@mui/icons-material/QueryStats";
 import PersonIcon from "@mui/icons-material/Person";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
@@ -33,9 +32,8 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Home", path: "/", icon: <HomeIcon /> },
-    { name: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
+    { name: "Dashboard & Analytics", path: "/dashboard", icon: <DashboardIcon /> },
     { name: "Chat", path: "/chat", icon: <ChatIcon /> },
-    { name: "Analytics", path: "/analytics", icon: <AnalyticsIcon /> },
     { name: "Profile", path: "/profile", icon: <PersonIcon /> },
   ];
 

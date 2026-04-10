@@ -1,4 +1,4 @@
-import { Box, TextField, Button, Paper, Typography } from "@mui/material";
+import { Box, TextField, Button, Paper, Typography, Link } from "@mui/material";
 import { motion } from "framer-motion";
 import { useThemeContext } from "../hooks/useThemeContext";
 
@@ -9,10 +9,9 @@ export default function ForgotPassword() {
     <Box
       sx={{
         height: "100vh",
-        background:
-          mode === "light"
-            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            : "linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)",
+        background: mode === "light" 
+           ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
+           : "linear-gradient(135deg, #1f2025 0%, #15161a 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -28,29 +27,20 @@ export default function ForgotPassword() {
           sx={{
             width: 420,
             padding: "50px 40px",
-            borderRadius: "20px",
-            background:
-              mode === "light"
-                ? "rgba(255, 255, 255, 0.95)"
-                : "rgba(35, 35, 35, 0.9)",
-            backdropFilter: "blur(10px)",
-            border:
-              mode === "light"
-                ? "1px solid rgba(255, 255, 255, 0.2)"
-                : "1px solid rgba(102, 126, 234, 0.2)",
-            boxShadow:
-              mode === "light"
-                ? "0 25px 50px rgba(0, 0, 0, 0.15)"
-                : "0 25px 50px rgba(102, 126, 234, 0.2)",
+            borderRadius: "24px",
+            background: mode === "light" ? "rgba(255, 255, 255, 0.95)" : "rgba(35, 38, 45, 0.8)",
+            backdropFilter: "blur(20px)",
+            border: mode === "light" ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid rgba(255, 255, 255, 0.05)",
+            boxShadow: mode === "light" ? "0 25px 50px rgba(0, 0, 0, 0.15)" : "0 25px 50px rgba(0, 0, 0, 0.5)",
           }}>
           {/* Heading */}
           <Typography
             variant="h4"
             sx={{
               mb: 2,
-              fontWeight: 700,
+              fontWeight: 800,
               textAlign: "center",
-              color: "#1a1a1a",
+              color: mode === "light" ? "#1a1a1a" : "#fff",
             }}>
             Reset Password
           </Typography>
@@ -60,11 +50,10 @@ export default function ForgotPassword() {
               mb: 3,
               fontSize: "0.95rem",
               textAlign: "center",
-              opacity: 0.8,
-              color: "#666",
+              color: mode === "light" ? "#666" : "#aaa",
             }}>
             Enter your registered email and we’ll send you a password reset
-            link.
+            link to get back into the engine.
           </Typography>
 
           {/* Input Email */}
@@ -74,18 +63,14 @@ export default function ForgotPassword() {
             type="email"
             sx={{
               mb: 3,
+              "& label": { color: mode === "light" ? "#555" : "#aaa" },
+              "& input": { color: mode === "light" ? "#1a1a1a" : "#fff" },
               "& .MuiOutlinedInput-root": {
                 borderRadius: "12px",
-                "& fieldset": {
-                  borderColor: "#e0e0e0",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#667eea",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#667eea",
-                  borderWidth: 2,
-                },
+                "& fieldset": { borderColor: mode === "light" ? "#e0e0e0" : "rgba(255,255,255,0.1)" },
+                "&:hover fieldset": { borderColor: "#667eea" },
+                "&.Mui-focused fieldset": { borderColor: "#667eea", borderWidth: 2 },
+                background: mode === "light" ? "transparent" : "rgba(255,255,255,0.02)"
               },
             }}
           />
@@ -114,26 +99,23 @@ export default function ForgotPassword() {
           {/* Back to Login */}
           <Typography
             sx={{
-              mt: 3,
+              mt: 4,
               textAlign: "center",
-              fontSize: "0.9rem",
-              color: "#666",
+              fontSize: "14px",
+              color: mode === "light" ? "#666" : "#aaa",
             }}>
             Remember your password?{" "}
-            <Box
-              component="a"
+            <Link
               href="/login"
               sx={{
-                color: "#667eea",
+                color: mode==="light"?"#667eea":"#8ba3ff",
                 fontWeight: 600,
                 textDecoration: "none",
                 cursor: "pointer",
-                "&:hover": {
-                  textDecoration: "underline",
-                },
+                "&:hover": { textDecoration: "underline" },
               }}>
               Back to Login
-            </Box>
+            </Link>
           </Typography>
         </Paper>
       </motion.div>

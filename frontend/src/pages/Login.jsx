@@ -1,15 +1,22 @@
 import { Box, TextField, Button, Typography, Alert, Link } from "@mui/material";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import LockIcon from "@mui/icons-material/Lock";
 import { useAuth } from "../hooks/useAuth";
+import { useThemeContext } from "../hooks/useThemeContext";
 
 export default function Login() {
-  const { login, error: authError } = useAuth();
+  const { login, error: authError, user } = useAuth();
+  const { mode } = useThemeContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,7 +31,6 @@ export default function Login() {
     try {
       const res = await login(email, password);
 
-      // 🔥 ADD THIS (CRITICAL FIX)
       if (res?.access_token) {
         localStorage.setItem("token", res.access_token);
       } else {
@@ -41,17 +47,13 @@ export default function Login() {
     }
   };
 
-  const fillTestCredentials = () => {
-    setEmail("test@health.com");
-    setPassword("Test123456");
-    setError("");
-  };
-
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        background: mode === "light" 
+           ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
+           : "linear-gradient(135deg, #1f2025 0%, #15161a 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -64,12 +66,12 @@ export default function Login() {
         <Box
           sx={{
             width: 400,
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-            borderRadius: "20px",
+            background: mode === "light" ? "rgba(255, 255, 255, 0.95)" : "rgba(35, 38, 45, 0.8)",
+            backdropFilter: "blur(20px)",
+            borderRadius: "24px",
             padding: "50px 40px",
-            boxShadow: "0 25px 50px rgba(0, 0, 0, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
+            boxShadow: mode === "light" ? "0 25px 50px rgba(0, 0, 0, 0.2)" : "0 25px 50px rgba(0, 0, 0, 0.4)",
+            border: mode === "light" ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid rgba(255, 255, 255, 0.05)",
           }}>
           {/* Header */}
           <Box
@@ -95,39 +97,25 @@ export default function Login() {
             <Typography
               sx={{
                 fontSize: 28,
-                fontWeight: 700,
-                color: "#1a1a1a",
+                fontWeight: 800,
+                color: mode === "light" ? "#1a1a1a" : "#fff",
                 textAlign: "center",
               }}>
               Welcome Back
             </Typography>
             <Typography
-              sx={{ fontSize: 14, color: "#666", mt: 1, textAlign: "center" }}>
-              Access your health dashboard
+              sx={{ fontSize: 14, color: mode === "light" ? "#666" : "#aaa", mt: 1, textAlign: "center" }}>
+              Access your intelligent health core
             </Typography>
           </Box>
 
           {authError && (
-            <Alert
-              severity="error"
-              sx={{
-                mb: 3,
-                borderRadius: "12px",
-                backgroundColor: "#ffebee",
-                border: "1px solid #ef5350",
-              }}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: "12px" }}>
               {authError}
             </Alert>
           )}
           {error && (
-            <Alert
-              severity="error"
-              sx={{
-                mb: 3,
-                borderRadius: "12px",
-                backgroundColor: "#ffebee",
-                border: "1px solid #ef5350",
-              }}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: "12px" }}>
               {error}
             </Alert>
           )}
@@ -145,19 +133,15 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               sx={{
+                "& label": { color: mode === "light" ? "#555" : "#aaa" },
+                "& input": { color: mode === "light" ? "#1a1a1a" : "#fff" },
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   fontSize: "15px",
-                  "& fieldset": {
-                    borderColor: "#e0e0e0",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#667eea",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#667eea",
-                    borderWidth: 2,
-                  },
+                  "& fieldset": { borderColor: mode === "light" ? "#e0e0e0" : "rgba(255,255,255,0.1)" },
+                  "&:hover fieldset": { borderColor: "#667eea" },
+                  "&.Mui-focused fieldset": { borderColor: "#667eea", borderWidth: 2 },
+                  background: mode === "light" ? "transparent" : "rgba(255,255,255,0.02)"
                 },
               }}
             />
@@ -169,19 +153,15 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               sx={{
+                "& label": { color: mode === "light" ? "#555" : "#aaa" },
+                "& input": { color: mode === "light" ? "#1a1a1a" : "#fff" },
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   fontSize: "15px",
-                  "& fieldset": {
-                    borderColor: "#e0e0e0",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#667eea",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#667eea",
-                    borderWidth: 2,
-                  },
+                  "& fieldset": { borderColor: mode === "light" ? "#e0e0e0" : "rgba(255,255,255,0.1)" },
+                  "&:hover fieldset": { borderColor: "#667eea" },
+                  "&.Mui-focused fieldset": { borderColor: "#667eea", borderWidth: 2 },
+                  background: mode === "light" ? "transparent" : "rgba(255,255,255,0.02)"
                 },
               }}
             />
@@ -191,7 +171,7 @@ export default function Login() {
               type="submit"
               disabled={loading}
               sx={{
-                mt: 2,
+                mt: 1,
                 py: 1.8,
                 fontSize: "16px",
                 fontWeight: 600,
@@ -200,65 +180,34 @@ export default function Login() {
                 color: "white",
                 textTransform: "none",
                 "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #5568d3 0%, #6a3f91 100%)",
+                  background: "linear-gradient(135deg, #5568d3 0%, #6a3f91 100%)",
                   boxShadow: "0 12px 24px rgba(102, 126, 234, 0.4)",
                 },
               }}>
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-          </Box>
-
-          {/* Test Account Helper */}
-          <Box
-            sx={{
-              mt: 3,
-              padding: "12px",
-              borderRadius: "12px",
-              background: "#f0f4ff",
-              border: "1px solid #e0e7ff",
-            }}>
-            <Typography sx={{ fontSize: 12, color: "#666", mb: 1 }}>
-              ?? Demo user - Click to fill:
-            </Typography>
-            <Button
-              fullWidth
-              size="small"
-              onClick={fillTestCredentials}
-              sx={{
-                fontSize: 12,
-                color: "#667eea",
-                textTransform: "none",
-                border: "1px solid #667eea",
-                "&:hover": {
-                  background: "#f0f4ff",
-                },
-              }}>
-              Use Test Account (test@health.com)
+              {loading ? "Authenticating..." : "Login"}
             </Button>
           </Box>
 
           {/* Footer */}
           <Box sx={{ mt: 4, textAlign: "center" }}>
-            <Typography sx={{ fontSize: 14, color: "#666" }}>
+            <Typography sx={{ fontSize: 14, color: mode === "light" ? "#666" : "#aaa" }}>
               Don't have an account?{" "}
               <Link
                 href="/signup"
                 sx={{
-                  color: "#667eea",
+                  color: mode==="light"?"#667eea":"#8ba3ff",
                   fontWeight: 600,
                   textDecoration: "none",
-                  cursor: "pointer",
                   "&:hover": { textDecoration: "underline" },
                 }}>
-                Sign up
+                Sign up for Beta
               </Link>
             </Typography>
-            <Typography sx={{ fontSize: 13, color: "#999", mt: 2 }}>
+            <Typography sx={{ fontSize: 13, color: mode === "light" ? "#999" : "#777", mt: 2 }}>
               <Link
                 href="/forgot"
                 sx={{
-                  color: "#667eea",
+                  color: mode==="light"?"#667eea":"#8ba3ff",
                   textDecoration: "none",
                   fontWeight: 500,
                 }}>
