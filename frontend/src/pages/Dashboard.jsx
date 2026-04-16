@@ -130,10 +130,26 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const { mode } = useThemeContext();
 
-  const fetchAnalytics = async () => {
-    try {
-      const res = await axios.get("http://127.0.0.1:8000/analytics/full-dashboard");
-      setData(res.data);
+
+    const fetchAnalytics = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅ ADD THIS
+
+    if (!token) {
+      console.error("❌ No token found");
+      return;
+    }
+
+    const res = await axios.get(
+      "http://127.0.0.1:8000/analytics/full-dashboard",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ ADD THIS
+        },
+      }
+    );
+
+    setData(res.data);
     } catch (err) {
       console.error("Analytics error:", err);
     } finally {

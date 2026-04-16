@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 from collections import defaultdict
 import json
-
+from .auth import get_current_user
 from . import schemas, models
 from .database import SessionLocal
 from .rate_limiter import limiter
@@ -24,8 +24,8 @@ def get_db():
 
 # ================= FULL REAL DASHBOARD =================
 @router.get("/full-dashboard")
-def full_dashboard(db: Session = Depends(get_db)):
-    chats = db.query(ChatHistory).all()
+def full_dashboard(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    chats = db.query(ChatHistory).filter(ChatHistory.user_id == current_user.id).all()
 
     disease_count = defaultdict(int)
     risk_count = defaultdict(int)
@@ -109,7 +109,68 @@ def full_dashboard(db: Session = Depends(get_db)):
         max(disease_count, key=disease_count.get)
         if disease_count else None
     )
+    
 
+    # ================= RECENT ACTIVITY =================
+    recent_activity = []
+
+    for i, chat in enumerate(sorted(chats, key=lambda x: x.updated_at, reverse=True)[:5]):
+        if not chat.messages:
+            continue
+
+        messages = chat.messages
+
+        # 🔥 HANDLE IF WHOLE MESSAGES IS STRING
+        if isinstance(messages, str):
+            try:
+                messages = json.loads(messages)
+            except:
+                continue
+
+        if not isinstance(messages, list):
+            continue
+
+        # 🔥 FIND LAST AI MESSAGE
+        for msg in reversed(messages):
+
+            if isinstance(msg, str):
+                try:
+                    msg = json.loads(msg)
+                except:
+                    continue
+            print("MSG DEBUG:", msg)
+
+            if not isinstance(msg, dict):
+                continue
+
+            if msg.get("sender") != "ai":
+                continue
+
+            try:
+                content = msg.get("content")
+
+                if isinstance(content, str):
+                    data = json.loads(content)
+                elif isinstance(content, dict):
+                    data = content
+                else:
+                    continue
+
+                recent_activity.append({
+                    "id": f"Q-{i+1}",
+                    "type": data.get("disease", "unknown"),
+                    "risk_level": data.get("risk_level", "low"),
+                    "status": "Report Generated",
+                    "time": str(chat.updated_at)
+                })
+                print("ADDED TO RECENT:", recent_activity)
+
+                break  # ✅ stop after first valid AI msg
+
+            except Exception as e:
+                print("Recent activity error:", e)
+                continue
+    
     # ================= FINAL RESPONSE =================
     return {
         "total_queries": total_queries,
@@ -120,6 +181,7 @@ def full_dashboard(db: Session = Depends(get_db)):
         "avg_confidence": avg_confidence,
         "emergency_cases": emergency_cases,
         "top_disease": top_disease,
+        "recent_activity": recent_activity
     }
 
 
@@ -127,11 +189,11 @@ def full_dashboard(db: Session = Depends(get_db)):
 
 @router.post("/record", response_model=schemas.SuccessResponse)
 @limiter.limit("60/minute")
-def record_analytics(request: Request, data: schemas.AnalyticsData, db: Session = Depends(get_db)):
+def record_analytics(request: Request, data: schemas.AnalyticsData, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     user_id = data.intent_distribution.get("user_id", 1)
 
     record = models.AnalyticsRecord(
-        user_id=user_id,
+        user_id=current_user.id,  # override with auth user id
         query_count=data.total_queries,
         emergency_cases=data.emergency_cases,
         avg_response_time_ms=data.avg_response_time_ms,
@@ -152,10 +214,10 @@ def record_analytics(request: Request, data: schemas.AnalyticsData, db: Session 
     }
 
 
-@router.get("/user/{user_id}", response_model=schemas.DailyAnalyticsResponse)
-def get_user_analytics(user_id: int, db: Session = Depends(get_db)):
+@router.get("/user", response_model=schemas.DailyAnalyticsResponse)
+def get_user_analytics(user_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     record = db.query(models.AnalyticsRecord)\
-        .filter(models.AnalyticsRecord.user_id == user_id)\
+        .filter(models.AnalyticsRecord.user_id == current_user.id)\
         .order_by(models.AnalyticsRecord.recorded_date.desc())\
         .first()
 
@@ -182,12 +244,11 @@ def get_daily(user_id: Optional[int] = None, days: int = 7, db: Session = Depend
 
 
 @router.get("/today", response_model=schemas.DailyAnalyticsResponse)
-def get_today(db: Session = Depends(get_db)):
-    user_id = 1
+def get_today(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     today = datetime.utcnow().date()
 
     record = db.query(models.AnalyticsRecord).filter(
-        models.AnalyticsRecord.user_id == user_id,
+        models.AnalyticsRecord.user_id == current_user.id,
         models.AnalyticsRecord.recorded_date >= datetime.combine(today, datetime.min.time())
     ).first()
 

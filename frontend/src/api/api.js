@@ -10,7 +10,8 @@ export const api = {
     return res.json();
   },
 
-  createChat: async (token) => {
+  createChat: async () => {
+    const token = localStorage.getItem("token");
     const res = await fetch(`${BASE_URL}/chat/create`, {
       method: "POST",
       headers: {
@@ -25,10 +26,12 @@ export const api = {
   sendMessage: async (chatId, message, token) => {
     const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`, // 🔥 IMPORTANT
       },
+
       body: JSON.stringify({
         message: message,
         language: "en",

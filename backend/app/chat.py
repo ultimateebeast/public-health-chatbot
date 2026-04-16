@@ -12,6 +12,7 @@ from datetime import datetime
 import logging
 import json
 from .ml_client import call_inference
+from .auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -27,9 +28,9 @@ def get_db():
 
 # ================= CREATE CHAT =================
 @router.post("/create", response_model=ChatHistoryResponse)
-def create_chat(request: ChatHistoryCreate, db: Session = Depends(get_db)):
+def create_chat(request: ChatHistoryCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     chat = ChatHistory(
-        user_id=1,  # replace later with auth
+        user_id=current_user.id,  # replace later with auth
         title=request.title or "New Chat",
         messages=[],
         total_messages=0,
@@ -45,8 +46,8 @@ def create_chat(request: ChatHistoryCreate, db: Session = Depends(get_db)):
 
 # ================= SEND MESSAGE =================
 @router.post("/{chat_id}/message", response_model=ChatMessageResponse)
-async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = Depends(get_db)):
-    chat = db.query(ChatHistory).filter(ChatHistory.id == chat_id).first()
+async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    chat = db.query(ChatHistory).filter(ChatHistory.id == chat_id, ChatHistory.user_id == current_user.id).first()
 
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
@@ -67,7 +68,7 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
     try:
         ml_result = await call_inference(
             request.message,
-            user_id=1,
+            user_id=current_user.id,
             language=request.language,
         )
 
@@ -152,3 +153,5 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         recommendations=ai_data["recommendations"],
         other_predictions=ai_data["other_predictions"],  # ✅ FIX
     )
+    
+    

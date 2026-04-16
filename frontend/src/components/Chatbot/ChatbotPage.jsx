@@ -29,6 +29,7 @@ const TypingIndicator = () => (
 );
 
 export default function ChatbotUI() {
+  // const token = localStorage.getItem("token");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,12 @@ export default function ChatbotUI() {
   // 🔥 SEND MESSAGE
   const sendMessage = async () => {
     if (!input.trim()) return;
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      console.error("❌ No token found. Please login again.");
+      return;
+    }
     const userText = input;
 
     setMessages((prev) => [...prev, { from: "user", text: userText }]);
@@ -56,13 +62,13 @@ export default function ChatbotUI() {
 
       // Create chat if not exists
       if (!currentChatId) {
-        const chat = await api.createChat();
+        const chat = await api.createChat(token);
         currentChatId = chat.id;
         setChatId(chat.id);
       }
 
       // Send message
-      const res = await api.sendMessage(currentChatId, userText);
+      const res = await api.sendMessage(currentChatId, userText, token);
 
       // 🔥 STORE FULL OBJECT (NOT STRING)
       setMessages((prev) => [...prev, { from: "ai", data: res }]);

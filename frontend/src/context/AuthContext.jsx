@@ -53,19 +53,24 @@ const login = async (email, password) => {
     // 🟢 Step 1: Firebase login
     const firebaseRes = await signInWithEmailAndPassword(auth, email, password);
 
-    // 🟢 Step 2: Call YOUR BACKEND login API
+    // 🟢 Step 2: Get Firebase ID Token
+    const idToken = await firebaseRes.user.getIdToken(); // 🔥 IMPORTANT
+
+    // 🟢 Step 3: Send Firebase token to backend
     const res = await fetch("http://127.0.0.1:8000/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        firebase_token: idToken, // ✅ FIXED
+      }),
     });
 
     const data = await res.json();
 
-    // 🔥 Step 3: Store backend token (CRITICAL)
     if (data?.access_token) {
+      localStorage.removeItem("token"); // 🔥 clear old
       localStorage.setItem("token", data.access_token);
     } else {
       throw new Error("Backend token not received");

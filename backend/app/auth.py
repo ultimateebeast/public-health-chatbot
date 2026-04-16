@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .models import User, RefreshToken
@@ -64,7 +64,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         db.refresh(db_user)
 
         # Create JWT tokens
-        access_token = create_token({"user_id": db_user.id, "email": db_user.email})
+        access_token = create_token({"user_id": db_user.id, "email": db_user.email, "firebase_uid": db_user.firebase_uid })
         refresh_token = create_refresh_token({"user_id": db_user.id})
 
         # Store refresh token
@@ -96,57 +96,42 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         )
 
 # ============= LOGIN ENDPOINT =============
-
 @router.post("/login", response_model=Token)
-def login(user: UserLogin, db: Session = Depends(get_db)):
-    """
-    Authenticate user with email and password.
-    """
+def login(data: dict, db: Session = Depends(get_db)):
+    firebase_token = data.get("firebase_token")
+
+    if not firebase_token:
+        raise HTTPException(status_code=400, detail="Missing Firebase token")
+
     try:
-        # Check if user exists in database
-        db_user = db.query(User).filter(User.email == user.email).first()
-        
-        if not db_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password"
+        # 🔥 VERIFY FIREBASE TOKEN
+        decoded = firebase_auth.verify_id_token(firebase_token)
+
+        firebase_uid = decoded["uid"]
+        email = decoded.get("email")
+
+        # 🔥 FIND USER BY UID (NOT EMAIL)
+        user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+        # 🔥 CREATE USER IF NOT EXISTS
+        if not user:
+            user = User(
+                firebase_uid=firebase_uid,
+                email=email,
+                created_at=datetime.utcnow()
             )
-        # Verify password with Firebase Auth via REST API if API key present
-        firebase_api_key = os.getenv("FIREBASE_API_KEY")
-        if firebase_api_key:
-            url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={firebase_api_key}"
-            try:
-                resp = requests.post(url, json={
-                    "email": user.email,
-                    "password": user.password,
-                    "returnSecureToken": True
-                }, timeout=10)
-                if resp.status_code != 200:
-                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-                # Optionally you can inspect resp.json() for idToken, localId etc.
-            except requests.RequestException:
-                raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth provider unavailable")
-        else:
-            # No API key provided: fall back to allowing login for existing DB user (development only)
-            # In production require FIREBASE_API_KEY to validate credentials.
-            pass
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
-        # Update last login
-        db_user.last_login_at = datetime.utcnow()
-        db.commit()
+        # 🔥 CREATE JWT
+        access_token = create_token({
+            "user_id": user.id,
+            "email": user.email,
+            "firebase_uid": user.firebase_uid
+        })
 
-        # Create JWT tokens
-        access_token = create_token({"user_id": db_user.id, "email": db_user.email})
-        refresh_token = create_refresh_token({"user_id": db_user.id})
-
-        # Store refresh token
-        db_refresh = RefreshToken(
-            user_id=db_user.id,
-            token=refresh_token,
-            expires_at=datetime.utcnow() + timedelta(days=7)
-        )
-        db.add(db_refresh)
-        db.commit()
+        refresh_token = create_refresh_token({"user_id": user.id})
 
         return {
             "access_token": access_token,
@@ -155,14 +140,9 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             "expires_in": 1800
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Login failed: {str(e)}"
-        )
-
+        print("🔥 LOGIN ERROR:", str(e))
+        raise HTTPException(status_code=401, detail="Invalid Firebase token")
 # ============= REFRESH TOKEN ENDPOINT =============
 
 @router.post("/refresh-token", response_model=Token)
@@ -274,3 +254,36 @@ def reset_password(request: ResetPasswordRequest):
     # Note: password reset confirmation is typically handled client-side via Firebase SDK.
     # If you need server-side confirmation, implement Firebase REST call here.
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Password reset confirmation should be handled client-side via Firebase SDK")
+
+# ============= GET CURRENT USER ENDPOINT =============
+
+def get_current_user(request: Request, db: Session = Depends(get_db)):
+    auth_header = request.headers.get("Authorization")
+
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Missing token")
+
+    try:
+        token = auth_header.split(" ")[1]
+
+        payload = decode_token(token)  # ✅ MUST come before print
+
+        print("🔥 TOKEN PAYLOAD:", payload)
+
+        firebase_uid = payload.get("firebase_uid")
+
+        if not firebase_uid:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print("🔥 DB USER FOUND:", user.id, user.email)
+
+        return user
+
+    except Exception as e:
+        print("🔥 AUTH ERROR:", str(e))
+        raise HTTPException(status_code=401, detail="Invalid token")

@@ -17,13 +17,44 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AA00FF"];
 export default function AnalyticsDashboard() {
   const [data, setData] = useState(null);
 
+  const token = localStorage.getItem("token"); // ✅ move OUTSIDE
+
+
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/analytics/full-dashboard")
-      .then((res) => res.json())
-      .then((res) => setData(res));
-  }, []);
+    
+    if (!token) {
+      console.error("❌ No token found");
+      return;
+    }
+
+    const fetchAnalytics = async () => {
+      try {
+        setData(null); // reset old data while loading new
+        const res = await fetch(
+          "http://127.0.0.1:8000/analytics/full-dashboard",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // ✅ correct
+            },
+          },
+        );
+
+        const data = await res.json();
+
+        
+        setData(data);
+      } catch (err) {
+        console.error("Analytics error:", err);
+      }
+    };
+
+    fetchAnalytics();
+  }, [token]); // 🔥 THIS IS THE MAIN FIX
+
+  
 
   if (!data) return <Typography>Loading...</Typography>;
+  
 
   // ================= TRANSFORM DATA =================
   const diseaseData = Object.entries(data.disease_distribution || {}).map(
@@ -46,6 +77,7 @@ export default function AnalyticsDashboard() {
       value,
     }),
   );
+
 
   // ================= UI =================
   return (

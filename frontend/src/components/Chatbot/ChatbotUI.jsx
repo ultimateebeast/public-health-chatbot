@@ -35,20 +35,32 @@ const TypingIndicator = () => (
 );
 
 export default function ChatbotUI() {
+   // const token = localStorage.getItem("token");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatId, setChatId] = useState(null);
 
+   const { user } = useAuth();
+   useEffect(() => {
+     if (!user) return;
+
+     const saved = localStorage.getItem(`health_ai_sessions_${user.uid}`);
+     setSessions(saved ? JSON.parse(saved) : []);
+
+     setMessages([]); // clear old chat
+     setChatId(null); // reset chat
+   }, [user]);
   // LOCAL STORAGE PERSISTENCE STATE
   const [sessions, setSessions] = useState(() => {
-    const saved = localStorage.getItem("health_ai_sessions");
+    if (!user) return [];
+    const saved = localStorage.getItem(`health_ai_sessions_${user.uid}`);
     return saved ? JSON.parse(saved) : [];
   });
 
   const messagesEndRef = useRef(null);
   const { mode } = useThemeContext();
-  const { user } = useAuth();
+  
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,7 +68,8 @@ export default function ChatbotUI() {
 
   // SYNC TO LOCAL STORAGE
   useEffect(() => {
-    if (!chatId || messages.length === 0) return;
+     if (!chatId || messages.length === 0) return;
+     if (!user) return;
     const newSessions = [...sessions];
     let idx = newSessions.findIndex(s => s.id === chatId);
     
@@ -75,7 +88,10 @@ export default function ChatbotUI() {
     }
     
     setSessions(newSessions);
-    localStorage.setItem("health_ai_sessions", JSON.stringify(newSessions));
+    localStorage.setItem(
+      `health_ai_sessions_${user.uid}`,
+      JSON.stringify(newSessions),
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, chatId]);
 
@@ -90,6 +106,12 @@ export default function ChatbotUI() {
   const sendMessage = async (overrideText = null) => {
     const userText = overrideText || input;
     if (!userText.trim()) return;
+   
+     const token = localStorage.getItem("token"); // ✅ ADD HERE
+     if (!token) {
+       console.error("❌ No token found. Please login again.");
+       return;
+     }
 
     if (!overrideText) setInput("");
     setMessages((prev) => [...prev, { from: "user", text: userText }]);
@@ -101,7 +123,7 @@ export default function ChatbotUI() {
         // Fallback for visual mock if backend createChat fails
         let newId = `chat-${Date.now()}`;
         try {
-           const chat = await api.createChat();
+           const chat = await api.createChat(token);
            newId = chat.id;
         } catch(err) {
            console.warn("Backend unavailable, using local memory ID");
@@ -110,7 +132,7 @@ export default function ChatbotUI() {
         setChatId(newId);
       }
 
-      const res = await api.sendMessage(currentChatId, userText);
+      const res = await api.sendMessage(currentChatId, userText, token);
       const safeData = {
         reply: res?.reply || "No response generated.",
         confidence: Number(res?.confidence || 0),
@@ -147,7 +169,10 @@ export default function ChatbotUI() {
     e.stopPropagation();
     const newSessions = sessions.filter(s => s.id !== id);
     setSessions(newSessions);
-    localStorage.setItem("health_ai_sessions", JSON.stringify(newSessions));
+    localStorage.setItem(
+      `health_ai_sessions_${user.uid}`,
+      JSON.stringify(newSessions),
+    );
     if (chatId === id) handleClearChat();
   };
 

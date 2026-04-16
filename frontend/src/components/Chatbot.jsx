@@ -5,6 +5,7 @@ import MicIcon from "@mui/icons-material/Mic";
 import { motion } from "framer-motion";
 
 export default function Chatbot() {
+  
   const [messages, setMessages] = useState([]);
 
   return (
