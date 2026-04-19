@@ -47,112 +47,8 @@ const COLORS = [
   "#d0ed57",
 ];
 
-// Apple-style Glass Card Component
-function GlassCard({ title, value, subtitle, mode }) {
-  return (
-    <Box
-      sx={{
-        padding: 3,
-        minHeight: "150px",
-        borderRadius: "20px",
-        background:
-          mode === "light"
-            ? "rgba(255, 255, 255, 0.85)"
-            : "rgba(35, 35, 35, 0.75)",
-        backdropFilter: "blur(12px)",
-        border:
-          mode === "light"
-            ? "1px solid rgba(255, 255, 255, 0.5)"
-            : "1px solid rgba(255, 255, 255, 0.05)",
-        boxShadow:
-          mode === "light"
-            ? "0 10px 30px rgba(0, 0, 0, 0.05)"
-            : "0 10px 30px rgba(0, 0, 0, 0.2)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        transition: "0.3s ease",
-        cursor: "pointer",
-        "&:hover": {
-          transform: "translateY(-6px)",
-          boxShadow:
-            mode === "light"
-              ? "0 15px 40px rgba(102, 126, 234, 0.15)"
-              : "0 15px 40px rgba(102, 126, 234, 0.3)",
-          background:
-            mode === "light"
-              ? "rgba(255, 255, 255, 0.95)"
-              : "rgba(45, 45, 45, 0.9)",
-        },
-      }}>
-      <Typography
-        sx={{
-          fontSize: "0.95rem",
-          opacity: 0.8,
-          color: mode === "light" ? "#666" : "#a0a0a0",
-          marginBottom: 0.5,
-          fontWeight: 600,
-        }}>
-        {title}
-      </Typography>
-
-      <Typography
-        sx={{
-          fontSize: "2.4rem",
-          fontWeight: 800,
-          color: "#667eea",
-          marginBottom: 0.5,
-        }}>
-        {value}
-      </Typography>
-
-      <Typography
-        sx={{
-          fontSize: "0.9rem",
-          opacity: 0.8,
-          color: mode === "light" ? "#999" : "#909090",
-        }}>
-        {subtitle}
-      </Typography>
-    </Box>
-  );
-}
-
-// Chart Wrapper
-function ChartCard({ title, children, mode }) {
-  return (
-    <Box
-      sx={{
-        padding: 4,
-        borderRadius: "24px",
-        background:
-          mode === "light"
-            ? "rgba(255, 255, 255, 0.85)"
-            : "rgba(30, 30, 30, 0.6)",
-        backdropFilter: "blur(12px)",
-        border:
-          mode === "light"
-            ? "1px solid rgba(255, 255, 255, 0.5)"
-            : "1px solid rgba(255, 255, 255, 0.05)",
-        boxShadow:
-          mode === "light" ? "0 10px 30px rgba(0, 0, 0, 0.03)" : "none",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-      }}>
-      <Typography
-        variant="h6"
-        sx={{
-          fontWeight: 800,
-          color: mode === "light" ? "#1a1a1a" : "#fff",
-          mb: 3,
-        }}>
-        {title}
-      </Typography>
-      <Box sx={{ flexGrow: 1, minHeight: 300 }}>{children}</Box>
-    </Box>
-  );
-}
+import MetricCard from "../components/ui/MetricCard";
+import ChartCard from "../components/ui/ChartCard";
 
 export default function Dashboard() {
   const cardsRef = useRef([]);
@@ -428,7 +324,7 @@ export default function Dashboard() {
           { title: "Active Users", value: "8.2K", subtitle: "Global network" },
         ].map((card, index) => (
           <div key={index} ref={(el) => (cardsRef.current[index] = el)}>
-            <GlassCard {...card} mode={mode} />
+            <MetricCard {...card} />
           </div>
         ))}
       </Box>
@@ -448,7 +344,7 @@ export default function Dashboard() {
           }}>
           {/* ROW 1: Temporal Usage (Area Chart) */}
           <Box sx={{ gridColumn: { xs: "1", md: "1 / span 2" } }}>
-            <ChartCard title="Temporal Query Velocity" mode={mode}>
+            <ChartCard title="Temporal Query Velocity">
               {dailyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={320}>
                   <AreaChart
@@ -528,7 +424,7 @@ export default function Dashboard() {
           </Box>
 
           {/* ROW 2A: Risk Distribution */}
-          <ChartCard title="Risk Topography" mode={mode}>
+          <ChartCard title="Risk Topography">
             {riskData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart
@@ -637,7 +533,7 @@ export default function Dashboard() {
           </ChartCard>
 
           {/* ROW 2B: Diagnosis Taxonomy */}
-          <ChartCard title="Diagnosis Taxonomy" mode={mode}>
+          <ChartCard title="Diagnosis Taxonomy">
             {diseaseData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -675,7 +571,7 @@ export default function Dashboard() {
 
           {/* ROW 3: Sentiment Matrix */}
           <Box sx={{ gridColumn: { xs: "1", md: "1 / span 2" } }}>
-            <ChartCard title="Global Sentiment Matrix" mode={mode}>
+            <ChartCard title="Global Sentiment Matrix">
               {sentimentData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart

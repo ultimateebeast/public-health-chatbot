@@ -74,6 +74,9 @@ def full_dashboard(db: Session = Depends(get_db), current_user=Depends(get_curre
 
                 # ================= EXTRACT =================
                 disease = data.get("disease", "unknown")
+                if str(disease).lower() == "unknown":
+                    continue
+                    
                 confidence = float(data.get("confidence", 0))
                 risk = data.get("risk_level", "low")
                 sentiment = data.get("sentiment", "neutral")
@@ -156,9 +159,13 @@ def full_dashboard(db: Session = Depends(get_db), current_user=Depends(get_curre
                 else:
                     continue
 
+                disease = data.get("disease", "unknown")
+                if str(disease).lower() == "unknown":
+                    continue
+
                 recent_activity.append({
                     "id": f"Q-{i+1}",
-                    "type": data.get("disease", "unknown"),
+                    "type": disease,
                     "risk_level": data.get("risk_level", "low"),
                     "status": "Report Generated",
                     "time": str(chat.updated_at)

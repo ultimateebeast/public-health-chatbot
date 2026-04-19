@@ -8,31 +8,7 @@ import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 
-// === REUSABLE GLASS CARD ===
-const GlassCard = ({ children, glow }) => {
-  const { mode } = useThemeContext();
-  return (
-    <Box
-      sx={{
-        p: 4,
-        borderRadius: "24px",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        background: mode === "light" ? "rgba(255,255,255,0.6)" : "rgba(30,30,30,0.4)",
-        backdropFilter: "blur(20px)",
-        border: `1px solid ${mode === "light" ? "rgba(102, 126, 234, 0.2)" : "rgba(255,255,255,0.05)"}`,
-        boxShadow: glow ? (mode === "light" ? "0 10px 40px rgba(102, 126, 234, 0.2)" : "0 10px 40px rgba(102, 126, 234, 0.3)") : "none",
-        transition: "all 0.3s ease",
-        "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: mode === "light" ? "0 15px 40px rgba(102,126,234,0.3)" : "0 15px 40px rgba(102,126,234,0.4)",
-        }
-      }}>
-      {children}
-    </Box>
-  );
-};
+import GlassCard from "../components/ui/GlassCard";
 
 export default function Landing() {
   const { mode } = useThemeContext();
