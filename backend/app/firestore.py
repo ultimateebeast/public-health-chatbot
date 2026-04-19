@@ -20,7 +20,8 @@ def init_firestore(cred_path: str = None):
         raise FileNotFoundError(f"Firestore credential file not found: {cred_path}")
 
     cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
     _db = firestore.client()
     _initialized = True
     return _db

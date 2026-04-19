@@ -9,6 +9,8 @@ from .schemas import (
     ChatMessageResponse,
 )
 from datetime import datetime
+# from app.firestore import db
+from app.firestore import save_analytics_to_firestore
 import logging
 import json
 from .ml_client import call_inference
@@ -122,6 +124,17 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
             "emergency": False,
             "recommendations": ["Please try again later"],
         }
+        # ai_data = {
+        #     "reply": "Mock response: You may have mild fever",
+        #     "disease": "fever",
+        #     "confidence": 75,
+        #     "other_predictions": [],
+        #     "intent": "mock",
+        #     "sentiment": "neutral",
+        #     "risk_level": "medium",
+        #     "emergency": False,
+        #     "recommendations": ["Rest", "Drink water"]
+        # }
 
     # ================= AI MESSAGE =================
     ai_msg = {
@@ -134,6 +147,25 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
     }
 
     chat.messages = chat.messages + [ai_msg]
+    
+        # ================= FIRESTORE LOGGING =================
+    try:
+        log = {
+            "user_id": current_user.id,
+            "chat_id": chat_id,
+            "query": request.message,
+            "response": ai_data["reply"],
+            "disease": ai_data["disease"],
+            "confidence": ai_data["confidence"],
+            "risk_level": ai_data["risk_level"],
+            "emergency": ai_data["emergency"],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+        save_analytics_to_firestore(log, "logs")
+
+    except Exception as e:
+        logging.error(f"Firestore logging failed: {str(e)}")
 
     # ================= META =================
     chat.total_messages += 2

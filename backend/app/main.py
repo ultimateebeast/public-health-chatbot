@@ -10,6 +10,7 @@ from .chat import router as chat_router
 from .analytics import router as analytics_router
 from .rate_limiter import limiter
 from .database import engine, Base
+from app.admin import router as admin_router
 
 load_dotenv()
 
@@ -103,6 +104,7 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(chat_router)
 app.include_router(analytics_router)
+app.include_router(admin_router)
 
 # ============= TEST ENDPOINT =============
 
