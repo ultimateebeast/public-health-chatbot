@@ -94,35 +94,81 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         emergency_keywords = ["chest pain", "breathing", "unconscious", "severe"]
         emergency = any(k in request.message.lower() for k in emergency_keywords)
 
+        # ================= CLINICAL ADVICE =================
+        disease_key = str(top["disease"]).lower()
+        
+        kb_map = {
+            "tuberculosis": {
+                "do": ["Wear a mask around others immediately", "Isolate in a well-ventilated room", "Contact a pulmonologist"],
+                "avoid": ["Public transportation", "Coughing openly", "Smoking or passive smoke"],
+                "worry": ["Coughing up blood", "Severe difficulty breathing", "Unexplained extreme weight loss"]
+            },
+            "gerd": {
+                "do": ["Eat smaller, more frequent meals", "Sit upright for 2-3 hours after eating", "Elevate your head while sleeping"],
+                "avoid": ["Spicy, high-fat, or acidic foods", "Eating right before bed", "Tight clothing around abdomen"],
+                "worry": ["Chest pain reaching left arm", "Difficulty swallowing food", "Vomiting dark blood"]
+            },
+            "fever": {
+                "do": ["Rest abundantly and stay home", "Hydrate constantly with clear fluids", "Take paracetamol if very uncomfortable"],
+                "avoid": ["Heavy physical exertion", "Cold ice baths (causes shock)", "Overdressing in massive blankets"],
+                "worry": ["Temperature over 103°F (39.4°C)", "Fever lasting > 3 days", "Neck stiffness or mental confusion"]
+            },
+            "cough": {
+                "do": ["Drink warm honey-lemon water", "Use a humidifier", "Rest your voice"],
+                "avoid": ["Cold beverages", "Dusty environments", "Exertion"],
+                "worry": ["Coughing blood", "Wheezing heavily", "Night sweats"]
+            },
+            "headache": {
+                 "do": ["Rest in a dark quiet room", "Hydrate", "Apply a cold/warm compress"],
+                 "avoid": ["Bright screens", "Loud noises", "Skipping meals"],
+                 "worry": ["'Worst headache of your life' feeling", "Vision loss", "Speech difficulty"]
+            },
+            "unknown": {
+                 "do": ["Rest and monitor your symptoms closely", "Stay hydrated", "Log any new symptoms"],
+                 "avoid": ["Strenuous activities", "Ignoring worsening pain", "Self-medicating heavily"],
+                 "worry": ["Sudden severe pain", "Loss of consciousness", "Breathing difficulty"]
+            }
+        }
+        
+        # Simple string-includes fallback matcher
+        advice = kb_map["unknown"]
+        for k, v in kb_map.items():
+            if k in disease_key:
+                advice = v
+                break
+
         # ================= AI DATA =================
         ai_data = {
             "reply": f"🦠 {top['disease'].upper()}\n📊 Confidence: {confidence:.2f}%",
             "disease": top["disease"],
             "confidence": confidence,
-            "other_predictions": preds[1:],  # ✅ important
+            "other_predictions": preds[1:],  
             "intent": "disease_prediction",
             "sentiment": "neutral",
             "risk_level": risk_level,
             "emergency": emergency,
-            "recommendations": [
-                "Consult a doctor if symptoms persist",
-                "Stay hydrated",
-            ],
+            "recommendations": ["Consult a doctor if symptoms persist"],
+            "what_to_do": advice["do"],
+            "what_to_avoid": advice["avoid"],
+            "when_to_worry": advice["worry"]
         }
 
     except Exception:
         logging.exception("ML ERROR")
 
         ai_data = {
-            "reply": "⚠️ AI service temporarily unavailable",
-            "disease": "unknown",
+            "reply": "⚠️ Symptoms Unclear",
+            "disease": "Symptoms Unclear",
             "confidence": 0.0,
             "other_predictions": [],
             "intent": "fallback",
             "sentiment": "neutral",
             "risk_level": "low",
             "emergency": False,
-            "recommendations": ["Please try again later"],
+            "recommendations": ["Could not parse exact condition from given symptoms"],
+            "what_to_do": ["Provide more specific medical symptoms", "Rest and monitor your condition", "Consult a physician if symptoms worsen"],
+            "what_to_avoid": ["Panic", "Self-medicating without proper diagnosis"],
+            "when_to_worry": ["Breathing issues", "Severe radiating pain", "Loss of consciousness"]
         }
         # ai_data = {
         #     "reply": "Mock response: You may have mild fever",
@@ -183,7 +229,10 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         emergency=ai_data["emergency"],
         confidence=ai_data["confidence"],
         recommendations=ai_data["recommendations"],
-        other_predictions=ai_data["other_predictions"],  # ✅ FIX
+        other_predictions=ai_data["other_predictions"], 
+        what_to_do=ai_data.get("what_to_do", []),
+        what_to_avoid=ai_data.get("what_to_avoid", []),
+        when_to_worry=ai_data.get("when_to_worry", [])
     )
     
     

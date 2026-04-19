@@ -12,8 +12,8 @@ export default function MetricCard({ title, value, subtitle }) {
         borderRadius: "20px",
         background:
           mode === "light"
-            ? "rgba(255, 255, 255, 0.85)"
-            : "rgba(35, 35, 35, 0.75)",
+             ? "linear-gradient(135deg, rgba(234, 240, 255, 0.6) 0%, rgba(255,255,255,0.9) 100%)" 
+             : "linear-gradient(135deg, rgba(30, 35, 45, 0.8) 0%, rgba(10, 15, 20, 0.9) 100%)",
         backdropFilter: "blur(12px)",
         border:
           mode === "light"

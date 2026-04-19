@@ -14,6 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import Lenis from "@studio-freight/lenis";
+import { motion } from "framer-motion";
 import { useThemeContext } from "../hooks/useThemeContext";
 import {
   PieChart,
@@ -192,12 +193,31 @@ export default function Dashboard() {
     <Box
       sx={{
         minHeight: "100vh",
-        padding: { xs: "20px", md: "40px" },
-        background:
-          mode === "light"
-            ? "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
-            : "linear-gradient(135deg, #0d0d0d 0%, #17181c 100%)",
+        position: "relative",
+        background: mode === "light" ? "#fbfbfe" : "#020202",
+        color: mode === "light" ? "#111" : "#fff",
+        overflowX: "hidden",
       }}>
+
+      <style>{`
+         @keyframes drift { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px, -30px) scale(1.05); } 100% { transform: translate(-20px, 20px) scale(0.95); } }
+      `}</style>
+      
+      {/* FIXED DYNAMIC BACKGROUND */}
+      <Box sx={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        {/* Subtle grid lines */}
+        <Box sx={{ position: "absolute", inset: 0, opacity: mode==="light"? 0.04 : 0.015, backgroundSize: "60px 60px", backgroundImage: `linear-gradient(to right, ${mode==="light"?"#000":"#fff"} 1px, transparent 1px), linear-gradient(to bottom, ${mode==="light"?"#000":"#fff"} 1px, transparent 1px)` }} />
+        
+        {/* Ambient Orbs */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }} style={{ width: "100%", height: "100%", position: "absolute" }}>
+           <Box sx={{ position: "absolute", top: "-10%", left: "10%", width: "40vw", height: "40vw", background: "radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 60%)", filter: "blur(80px)", animation: "drift 20s infinite alternate linear" }} />
+           <Box sx={{ position: "absolute", bottom: "10%", right: "10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(255,106,136,0.1) 0%, transparent 60%)", filter: "blur(100px)", animation: "drift 25s infinite alternate-reverse linear" }} />
+        </motion.div>
+      </Box>
+
+      {/* DASHBOARD CONTENT */}
+      <Box sx={{ position: "relative", zIndex: 1, p: { xs: 3, md: 5 } }}>
+
       {/* Global Header & Action Bar */}
       <Box
         sx={{
@@ -834,5 +854,6 @@ export default function Dashboard() {
         </Box>
       </Box>
     </Box>
+  </Box>
   );
 }
