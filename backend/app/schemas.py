@@ -105,8 +105,13 @@ class ChatMessageResponse(BaseModel):
     
     # ✅ ADD THIS
     other_predictions: Optional[List[Dict[str, Any]]] = []
-
-# ============= HEALTH REPORT SCHEMAS =============
+    top_3_predictions: Optional[List[Dict[str, Any]]] = None
+    precautions: Optional[str] = None
+    note: Optional[str] = None
+    disclaimer: Optional[str] = None
+    what_to_do: Optional[List[str]] = []
+    what_to_avoid: Optional[List[str]] = []
+    when_to_worry: Optional[List[str]] = []
 
 class HealthReportCreate(BaseModel):
     symptoms: List[str]

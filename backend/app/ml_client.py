@@ -37,9 +37,7 @@ async def call_inference(
             response.raise_for_status()
             data = response.json()
 
-            return {
-                "top_3_predictions": data.get("top_3_predictions", [])
-            }
+            return data
 
     except Exception as e:
         print("ML CONNECTION ERROR:", str(e))

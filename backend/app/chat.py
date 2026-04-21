@@ -63,8 +63,7 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         "sentiment": None,
         "emergency_flag": False,
     }
-
-    chat.messages = (chat.messages or []) + [user_msg]
+    # Appended later only if not fallback
 
     # ================= ML =================
     try:
@@ -143,6 +142,10 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
             "disease": top["disease"],
             "confidence": confidence,
             "other_predictions": preds[1:],  
+            "top_3_predictions": preds,
+            "precautions": ml_result.get("precautions"),
+            "note": ml_result.get("note"),
+            "disclaimer": ml_result.get("disclaimer"),
             "intent": "disease_prediction",
             "sentiment": "neutral",
             "risk_level": risk_level,
@@ -161,6 +164,10 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
             "disease": "Symptoms Unclear",
             "confidence": 0.0,
             "other_predictions": [],
+            "top_3_predictions": [],
+            "precautions": None,
+            "note": None,
+            "disclaimer": None,
             "intent": "fallback",
             "sentiment": "neutral",
             "risk_level": "low",
@@ -182,43 +189,45 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         #     "recommendations": ["Rest", "Drink water"]
         # }
 
-    # ================= AI MESSAGE =================
-    ai_msg = {
-        "sender": "ai",
-        "content": json.dumps(ai_data),  # stored as string
-        "timestamp": datetime.utcnow().isoformat(),  # ✅ FIX
-        "intent": ai_data["intent"],
-        "sentiment": ai_data["sentiment"],
-        "emergency_flag": ai_data["emergency"],
-    }
-
-    chat.messages = chat.messages + [ai_msg]
-    
-        # ================= FIRESTORE LOGGING =================
-    try:
-        log = {
-            "user_id": current_user.id,
-            "chat_id": chat_id,
-            "query": request.message,
-            "response": ai_data["reply"],
-            "disease": ai_data["disease"],
-            "confidence": ai_data["confidence"],
-            "risk_level": ai_data["risk_level"],
-            "emergency": ai_data["emergency"],
-            "timestamp": datetime.utcnow().isoformat()
+    disease_val = str(ai_data.get("disease", "")).lower()
+    if ai_data.get("intent") != "fallback" and disease_val != "unknown":
+        # ================= AI MESSAGE =================
+        ai_msg = {
+            "sender": "ai",
+            "content": json.dumps(ai_data),  # stored as string
+            "timestamp": datetime.utcnow().isoformat(),  # ✅ FIX
+            "intent": ai_data["intent"],
+            "sentiment": ai_data["sentiment"],
+            "emergency_flag": ai_data["emergency"],
         }
 
-        save_analytics_to_firestore(log, "logs")
+        chat.messages = (chat.messages or []) + [user_msg, ai_msg]
+        
+        # ================= FIRESTORE LOGGING =================
+        try:
+            log = {
+                "user_id": current_user.id,
+                "chat_id": chat_id,
+                "query": request.message,
+                "response": ai_data["reply"],
+                "disease": ai_data["disease"],
+                "confidence": ai_data["confidence"],
+                "risk_level": ai_data["risk_level"],
+                "emergency": ai_data["emergency"],
+                "timestamp": datetime.utcnow().isoformat()
+            }
 
-    except Exception as e:
-        logging.error(f"Firestore logging failed: {str(e)}")
+            save_analytics_to_firestore(log, "logs")
 
-    # ================= META =================
-    chat.total_messages += 2
-    chat.updated_at = datetime.utcnow()  # ✅ FIX
+        except Exception as e:
+            logging.error(f"Firestore logging failed: {str(e)}")
 
-    db.commit()
-    db.refresh(chat)
+        # ================= META =================
+        chat.total_messages += 2
+        chat.updated_at = datetime.utcnow()  # ✅ FIX
+
+        db.commit()
+        db.refresh(chat)
 
     # ================= RESPONSE =================
     return ChatMessageResponse(
@@ -230,6 +239,10 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         confidence=ai_data["confidence"],
         recommendations=ai_data["recommendations"],
         other_predictions=ai_data["other_predictions"], 
+        top_3_predictions=ai_data["top_3_predictions"],
+        precautions=ai_data["precautions"],
+        note=ai_data["note"],
+        disclaimer=ai_data["disclaimer"],
         what_to_do=ai_data.get("what_to_do", []),
         what_to_avoid=ai_data.get("what_to_avoid", []),
         when_to_worry=ai_data.get("when_to_worry", [])

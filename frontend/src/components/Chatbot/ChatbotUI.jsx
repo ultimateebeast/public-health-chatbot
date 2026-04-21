@@ -133,13 +133,27 @@ export default function ChatbotUI() {
       }
 
       const res = await api.sendMessage(currentChatId, userText, token);
+      
+      let topPrediction = res?.top_3_predictions?.[0] || null;
+      let otherPredictions = res?.top_3_predictions?.slice(1) || null;
+
+      const reply = topPrediction?.disease || res?.reply || "No assessment generated.";
+      const confidence = Number(topPrediction?.confidence || res?.confidence || 0);
+      const mappedOther = otherPredictions || res?.other_predictions || [];
+      const mappedRecommendations = res?.precautions 
+        ? res.precautions.split(';').map(s => s.trim()).filter(Boolean) 
+        : (res?.recommendations || []);
+      const riskLevel = res?.risk_level || (confidence >= 75 ? "high" : confidence >= 40 ? "medium" : "low");
+
       const safeData = {
-        reply: res?.reply || "No response generated.",
-        confidence: Number(res?.confidence || 0),
-        other_predictions: res?.other_predictions || [],
-        recommendations: res?.recommendations || [],
-        risk_level: res?.risk_level || "low",
+        reply: reply,
+        confidence: confidence,
+        other_predictions: mappedOther,
+        recommendations: mappedRecommendations,
+        risk_level: riskLevel,
         emergency: res?.emergency || false,
+        note: res?.note || "",
+        disclaimer: res?.disclaimer || ""
       };
 
       setMessages((prev) => [...prev, { from: "ai", data: safeData }]);
@@ -294,7 +308,8 @@ export default function ChatbotUI() {
               Action Plan
             </Typography>
             {data.recommendations.map((rec, i) => {
-              const isDoctorQuery = rec.toLowerCase().includes("doctor") || rec.toLowerCase().includes("physician") || rec.toLowerCase().includes("consult") || rec.toLowerCase().includes("hospital");
+              const searchStr = rec.toLowerCase();
+              const isDoctorQuery = searchStr.includes("doctor") || searchStr.includes("physician") || searchStr.includes("consult") || searchStr.includes("hospital") || searchStr.includes("medical");
               return (
               <Box key={i} sx={{ display:"flex", alignItems:"flex-start", gap: 1.5, mb: 1 }}>
                  <CheckCircleRoundedIcon sx={{ fontSize: 16, color: "#667eea", mt: 0.2 }} />
@@ -326,6 +341,24 @@ export default function ChatbotUI() {
                  )}
               </Box>
             )})}
+          </Box>
+        )}
+
+        {/* Notes and Disclaimers */}
+        {data.note && (
+          <Box sx={{ mt: 2.5, p: 1.5, borderRadius: "10px", background: mode==="light"?"rgba(102, 126, 234, 0.05)":"rgba(102, 126, 234, 0.05)", border: mode==="light"?"1px solid rgba(102, 126, 234, 0.1)":"1px solid rgba(102, 126, 234, 0.1)", display: "flex", alignItems: "flex-start", gap: 1 }}>
+             <Typography fontSize={14}>ℹ️</Typography>
+             <Typography fontSize={12} sx={{ color: mode==="light"?"#555":"#aaa", fontStyle: "italic", lineHeight: 1.5, mt: 0.2 }}>
+               {data.note}
+             </Typography>
+          </Box>
+        )}
+
+        {data.disclaimer && (
+          <Box sx={{ mt: 2, textAlign: "center" }}>
+             <Typography fontSize={11} sx={{ color: mode==="light"?"#999":"#666", fontWeight: 500, opacity: 0.8 }}>
+               {data.disclaimer}
+             </Typography>
           </Box>
         )}
       </Box>
