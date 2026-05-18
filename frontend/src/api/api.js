@@ -10,15 +10,14 @@ export const api = {
     return res.json();
   },
 
-  createChat: async () => {
-    const token = localStorage.getItem("token");
+  createChat: async (token, titleText) => {
     const res = await fetch(`${BASE_URL}/chat/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`, // 🔥 IMPORTANT
       },
-      body: JSON.stringify({ title: "New Chat" }),
+      body: JSON.stringify({ title: titleText || "New AI Session" }),
     });
     return res.json();
   },
@@ -28,6 +27,16 @@ export const api = {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  },
+
+  deleteChat: async (chatId, token) => {
+    const res = await fetch(`${BASE_URL}/chat/${chatId}`, {
+      method: "DELETE",
+      headers: {
         Authorization: `Bearer ${token}`,
       },
     });

@@ -136,10 +136,10 @@ export default function ChatbotUI() {
   }, [messages, chatId]);
 
   const quickActions = [
-    "What are the early signs of a migraine?",
-    "Analyze my chest pain risk factors.",
-    "Give me a summary of a healthy diet.",
-    "How does the AI Engine determine risk?",
+    "I have a severe headache and vision loss.",
+    "I've been coughing up blood and losing weight.",
+    "I feel chest pain after eating spicy food.",
+    "I have a high fever for the last 3 days.",
   ];
 
   // ================= SEND MESSAGE =================
@@ -163,7 +163,7 @@ export default function ChatbotUI() {
         // Fallback for visual mock if backend createChat fails
         let newId = `chat-${Date.now()}`;
         try {
-           const chat = await api.createChat(token);
+           const chat = await api.createChat(token, userText);
            newId = chat.id;
         } catch(err) {
            console.warn("Backend unavailable, using local memory ID");
@@ -219,8 +219,18 @@ export default function ChatbotUI() {
     }
   };
 
-  const deleteSession = (id, e) => {
+  const deleteSession = async (id, e) => {
     e.stopPropagation();
+
+    const token = localStorage.getItem("token");
+    if (token && id && (typeof id !== "string" || !id.toString().startsWith("chat-"))) {
+      try {
+        await api.deleteChat(id, token);
+      } catch (err) {
+        console.error("Failed to delete chat on backend:", err);
+      }
+    }
+
     const newSessions = sessions.filter(s => s.id !== id);
     setSessions(newSessions);
     localStorage.setItem(
