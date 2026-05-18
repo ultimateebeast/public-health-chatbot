@@ -42,15 +42,55 @@ export default function ChatbotUI() {
   const [chatId, setChatId] = useState(null);
 
    const { user } = useAuth();
+   
+   // Mapping function for backend chat format
+   const mapBackendChatsToUI = (backendChats) => {
+     return backendChats.map(chat => ({
+       id: chat.id,
+       title: chat.title || "AI Session",
+       date: chat.updated_at || chat.created_at,
+       messages: (chat.messages || []).map(m => {
+          if (m.sender === "user") {
+             return { from: "user", text: m.content };
+          } else {
+             try {
+                return { from: "ai", data: JSON.parse(m.content) };
+             } catch(e) {
+                return { from: "ai", data: { reply: m.content } };
+             }
+          }
+       })
+     }));
+   };
+
    useEffect(() => {
      if (!user) return;
 
-     const saved = localStorage.getItem(`health_ai_sessions_${user.uid}`);
-     setSessions(saved ? JSON.parse(saved) : []);
+     const token = localStorage.getItem("token");
+     if (token) {
+        api.getChats(token).then(res => {
+           if (Array.isArray(res)) {
+              const mapped = mapBackendChatsToUI(res);
+              setSessions(mapped);
+              localStorage.setItem(`health_ai_sessions_${user.uid}`, JSON.stringify(mapped));
+           } else {
+              const saved = localStorage.getItem(`health_ai_sessions_${user.uid}`);
+              setSessions(saved ? JSON.parse(saved) : []);
+           }
+        }).catch(err => {
+           console.error("Failed to fetch chats", err);
+           const saved = localStorage.getItem(`health_ai_sessions_${user.uid}`);
+           setSessions(saved ? JSON.parse(saved) : []);
+        });
+     } else {
+       const saved = localStorage.getItem(`health_ai_sessions_${user.uid}`);
+       setSessions(saved ? JSON.parse(saved) : []);
+     }
 
      setMessages([]); // clear old chat
      setChatId(null); // reset chat
    }, [user]);
+
   // LOCAL STORAGE PERSISTENCE STATE
   const [sessions, setSessions] = useState(() => {
     if (!user) return [];
@@ -307,42 +347,50 @@ export default function ChatbotUI() {
             <Typography fontSize={12} sx={{ color: mode==="light"?"#888":"#888", fontWeight: 700, textTransform: "uppercase", mb: 1.5, letterSpacing: "0.5px" }}>
               Action Plan
             </Typography>
-            {data.recommendations.map((rec, i) => {
-              const searchStr = rec.toLowerCase();
-              const isDoctorQuery = searchStr.includes("doctor") || searchStr.includes("physician") || searchStr.includes("consult") || searchStr.includes("hospital") || searchStr.includes("medical");
-              return (
+            {data.recommendations.map((rec, i) => (
               <Box key={i} sx={{ display:"flex", alignItems:"flex-start", gap: 1.5, mb: 1 }}>
                  <CheckCircleRoundedIcon sx={{ fontSize: 16, color: "#667eea", mt: 0.2 }} />
-                 {isDoctorQuery ? (
-                    <Box 
-                       component="a" 
-                       href={`https://www.google.com/maps/search/${encodeURIComponent(cleanReply)}+specialist+doctor+near+me`} 
-                       target="_blank" 
-                       rel="noopener noreferrer" 
-                       sx={{ 
-                          color: mode==="light" ? "#667eea" : "#a3b1f0", 
-                          fontSize: 13,
-                          lineHeight: 1.5, 
-                          fontWeight: 700, 
-                          textDecoration: "none", 
-                          display: "inline-flex", 
-                          alignItems: "center", 
-                          gap: 0.8,
-                          transition: "0.2s",
-                          "&:hover": { color: mode==="light" ? "#4a5590" : "#d1d9ff" }
-                       }}>
-                       {rec}
-                       <Box component="span" sx={{ fontSize: "0.75rem", background: mode==="light"?"rgba(102, 126, 234, 0.1)":"rgba(163, 177, 240, 0.1)", px: 0.8, py: 0.2, borderRadius: "4px", display: "flex", alignItems: "center" }}>
-                          Find nearby 📍
-                       </Box>
-                    </Box>
-                 ) : (
-                    <Typography fontSize={13} sx={{ color: mode==="light"?"#444":"#ddd", lineHeight: 1.5, fontWeight: 500 }}>{rec}</Typography>
-                 )}
+                 <Typography fontSize={13} sx={{ color: mode==="light"?"#444":"#ddd", lineHeight: 1.5, fontWeight: 500 }}>{rec}</Typography>
               </Box>
-            )})}
+            ))}
           </Box>
         )}
+
+        {/* Improved Universal Location Feature */}
+        {(() => {
+          const isValid = cleanReply && !cleanReply.toLowerCase().includes("unclear") && !cleanReply.toLowerCase().includes("unknown") && !cleanReply.toLowerCase().includes("no assessment");
+          const searchQuery = isValid ? encodeURIComponent(cleanReply) + "+specialist" : "general+physician";
+          const displayName = isValid && cleanReply.length < 35 ? cleanReply : "Medical";
+          
+          return (
+            <Box sx={{ mt: 2.5 }}>
+              <Button
+                variant="contained"
+                href={`https://www.google.com/maps/search/${searchQuery}+doctor+near+me`}
+                target="_blank"
+                rel="noopener noreferrer"
+                fullWidth
+                sx={{
+                  background: mode === "light" ? "linear-gradient(135deg, #667eea, #764ba2)" : "linear-gradient(135deg, #5b71d6, #6b4494)",
+                  color: "#fff",
+                  py: 1.2,
+                  borderRadius: "12px",
+                  fontWeight: 700,
+                  textTransform: "none",
+                  display: "flex",
+                  gap: 1,
+                  boxShadow: "0 4px 15px rgba(102, 126, 234, 0.3)",
+                  "&:hover": {
+                    background: mode === "light" ? "linear-gradient(135deg, #5b71d6, #6b4494)" : "linear-gradient(135deg, #667eea, #764ba2)",
+                    boxShadow: "0 6px 20px rgba(102, 126, 234, 0.5)",
+                  }
+                }}
+              >
+                📍 Find {displayName} Specialists Near Me
+              </Button>
+            </Box>
+          );
+        })()}
 
         {/* Notes and Disclaimers */}
         {data.note && (

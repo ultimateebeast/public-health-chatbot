@@ -46,6 +46,13 @@ def create_chat(request: ChatHistoryCreate, db: Session = Depends(get_db), curre
     return chat
 
 
+# ================= GET CHATS =================
+@router.get("/sessions", response_model=list[ChatHistoryResponse])
+def get_chats(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    chats = db.query(ChatHistory).filter(ChatHistory.user_id == current_user.id).order_by(ChatHistory.updated_at.desc()).all()
+    return chats
+
+
 # ================= SEND MESSAGE =================
 @router.post("/{chat_id}/message", response_model=ChatMessageResponse)
 async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
@@ -206,7 +213,8 @@ async def send_message(chat_id: int, request: ChatMessageRequest, db: Session = 
         # ================= FIRESTORE LOGGING =================
         try:
             log = {
-                "user_id": current_user.id,
+                "user_id": current_user.firebase_uid,
+                "user_name": current_user.display_name or current_user.email.split('@')[0],
                 "chat_id": chat_id,
                 "query": request.message,
                 "response": ai_data["reply"],

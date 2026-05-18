@@ -23,6 +23,17 @@ export const api = {
     return res.json();
   },
 
+  getChats: async (token) => {
+    const res = await fetch(`${BASE_URL}/chat/sessions`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  },
+
   sendMessage: async (chatId, message, token) => {
     const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
       method: "POST",

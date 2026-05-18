@@ -24,10 +24,15 @@ def format_doc(doc, pg_db: Session = None):
     user_name = "Anonymous"
     
     # Try resolving user
-    if user_id and pg_db:
-        user_record = pg_db.query(User).filter(User.id == user_id).first()
+    if user_id and pg_db and user_name == "Anonymous":
+        if isinstance(user_id, str):
+            user_record = pg_db.query(User).filter(User.firebase_uid == user_id).first()
+        else:
+            user_record = pg_db.query(User).filter(User.id == user_id).first()
         if user_record:
             user_name = user_record.display_name or user_record.email.split('@')[0]
+            # Force replace the old local int ID with the global firebase UID for grouping
+            user_id = user_record.firebase_uid
 
     return {
         "id": doc.id,
@@ -92,14 +97,29 @@ def get_high_risk(user=Depends(require_admin), db: Session = Depends(get_db)):
 
 # 🔹 User Drill-Down Analytics
 @router.get("/user/{target_user_id}/analysis")
-def get_user_analysis(target_user_id: int, user=Depends(require_admin), db: Session = Depends(get_db)):
+def get_user_analysis(target_user_id: str, user=Depends(require_admin), db: Session = Depends(get_db)):
     # Verify user exists
-    target_user = db.query(User).filter(User.id == target_user_id).first()
+    target_user = None
+    if target_user_id.isdigit():
+        target_user = db.query(User).filter(User.id == int(target_user_id)).first()
+    if not target_user:
+        target_user = db.query(User).filter(User.firebase_uid == target_user_id).first()
+        
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    # Get user's logs from firebase
-    docs = fs_db.collection("logs").where("user_id", "==", target_user_id).stream()
+    # Get user's logs from firebase using BOTH local ID and firebase UID to support old and new logs
+    docs_by_id = fs_db.collection("logs").where("user_id", "==", target_user.id).stream()
+    docs_by_uid = fs_db.collection("logs").where("user_id", "==", target_user.firebase_uid).stream()
+    
+    # Merge unique docs
+    docs_dict = {}
+    for doc in docs_by_id:
+        docs_dict[doc.id] = doc
+    for doc in docs_by_uid:
+        docs_dict[doc.id] = doc
+        
+    docs = list(docs_dict.values())
     
     total_queries = 0
     high_risk_cases = 0
